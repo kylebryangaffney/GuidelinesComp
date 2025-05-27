@@ -13,6 +13,7 @@
 
 #include "Service/Parameters.h"
 #include "Service/ProtectYourEars.h"
+#include "DSP/CompressorUnit.h"
 
 
 //==============================================================================
@@ -64,6 +65,7 @@ public:
     };
 
     Parameters params;
+    CompressorUnit compA;
 
 private:
 
@@ -76,10 +78,22 @@ private:
     float bypassFadeInc = 0.0f;
     bool  isBypassing = false;
 
+    float controlAttackA = 50.0f;
+    float controlThresholdA = -12.f;
+    float compressReleaseA = 55.0f;
+    float compressRatioA = 2.0f;
+
+    juce::LinearSmoothedValue<float> controlAttackASmoother = 50.0f;
+    juce::LinearSmoothedValue<float> controlThresholdASmoother = -12.f;
+    juce::LinearSmoothedValue<float> compressReleaseASmoother = 55.0f;
+    juce::LinearSmoothedValue<float> compressRatioASmoother = 2.0f;
+
+
     void initializeProcessing(juce::AudioBuffer<float>& buffer);
     void updateBypassState();
     void updateBypassFade();
     void updateLowCutFilter();
+    void updateMappedCompressorParameters();
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuideLinesCompAudioProcessor)
 };

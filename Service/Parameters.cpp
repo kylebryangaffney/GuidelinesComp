@@ -24,6 +24,8 @@ Parameters::Parameters(juce::AudioProcessorValueTreeState& apvts)
     castParameter(apvts, outputGainParamID, outputGainParam);
     castParameter(apvts, lowCutParamID, lowCutParam);
     castParameter(apvts, bypassParamID, bypassParam);
+    castParameter(apvts, controlParamID, controlParam);
+    castParameter(apvts, compressionParamID, compressionParam);
 }
 
 
@@ -32,8 +34,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout Parameters::createParameterL
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        outputGainParamID, "Output Gain",
-        juce::NormalisableRange<float>{ -18.f, 12.f },
+        controlParamID, "Control",
+        juce::NormalisableRange<float>{ 0.0f, 100.0f },
+        0.f,
+        juce::AudioParameterFloatAttributes()
+    ));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        compressionParamID, "Compression",
+        juce::NormalisableRange<float>{ 0.0f, 100.0f },
         0.f,
         juce::AudioParameterFloatAttributes()
     ));
@@ -46,6 +55,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout Parameters::createParameterL
         juce::AudioParameterFloatAttributes()
     ));
 
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        outputGainParamID, "Output Gain",
+        juce::NormalisableRange<float>{ -18.f, 12.f },
+        0.f,
+        juce::AudioParameterFloatAttributes()
+    ));
+
     layout.add(std::make_unique<juce::AudioParameterBool>(
         bypassParamID, "Bypass", false
     ));
@@ -55,10 +71,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout Parameters::createParameterL
 
 void Parameters::prepareToPlay(double sampleRate) noexcept
 {
-    double duration = 0.0002;
+    const double smootheningInSeconds = 0.0002;
 
-    outputGainSmoother.reset(sampleRate, duration);
-    lowCutSmoother.reset(sampleRate, duration);
+    outputGainSmoother.reset(sampleRate, smootheningInSeconds);
+    lowCutSmoother.reset(sampleRate, smootheningInSeconds);
+    controlSmoother.reset(sampleRate, smootheningInSeconds);
+    compressionSmoother.reset(sampleRate, smootheningInSeconds);
 }
 
 
@@ -66,15 +84,21 @@ void Parameters::reset() noexcept
 {
     outputGain = 0.f;
     lowCut = 20.f;
+    control = 0.0f;
+    compression = 0.0f;
 
     outputGainSmoother.setCurrentAndTargetValue(juce::Decibels::decibelsToGain(outputGainParam->get()));
     lowCutSmoother.setCurrentAndTargetValue(lowCutParam->get());
+    controlSmoother.setCurrentAndTargetValue(controlParam->get());
+    compressionSmoother.setCurrentAndTargetValue(compressionParam->get());
 }
 
 void Parameters::update() noexcept
 {
     outputGainSmoother.setTargetValue(juce::Decibels::decibelsToGain(outputGainParam->get()));
     lowCutSmoother.setTargetValue(lowCutParam->get());
+    controlSmoother.setTargetValue(controlParam->get());
+    compressionSmoother.setTargetValue(compressionParam->get());
     bypassed = bypassParam->get();
 }
 
@@ -82,4 +106,6 @@ void Parameters::smoothen() noexcept
 {
     outputGain = outputGainSmoother.getNextValue();
     lowCut = lowCutSmoother.getNextValue();
+    control = controlSmoother.getNextValue();
+    compression = compressionSmoother.getNextValue();
 }

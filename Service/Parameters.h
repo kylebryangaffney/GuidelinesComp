@@ -14,6 +14,8 @@
 
 const juce::ParameterID outputGainParamID{ "outputGain",       1 };
 const juce::ParameterID lowCutParamID{ "lowCut",     1 };
+const juce::ParameterID controlParamID{ "control", 1 };
+const juce::ParameterID compressionParamID{ "compression", 1 };
 const juce::ParameterID bypassParamID{ "bypass",     1 };
 
 class Parameters
@@ -30,6 +32,8 @@ public:
     //==============================================================================
     float outputGain = 0.f;
     float lowCut = 20.f;
+    float control = 1.0f;
+    float compression = 1.0f;
     bool  bypassed = false;
 
     //==============================================================================
@@ -39,11 +43,15 @@ private:
     // Parameter references
     juce::AudioParameterFloat* outputGainParam = nullptr;
     juce::AudioParameterFloat* lowCutParam = nullptr;
+    juce::AudioParameterFloat* controlParam = nullptr;
+    juce::AudioParameterFloat* compressionParam = nullptr;
 
 
     // Smoothers
     juce::LinearSmoothedValue<float> outputGainSmoother;
     juce::LinearSmoothedValue<float> lowCutSmoother;
-    
+    juce::LinearSmoothedValue<float> controlSmoother;
+    juce::LinearSmoothedValue<float> compressionSmoother;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Parameters)
 };
