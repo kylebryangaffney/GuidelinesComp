@@ -10,31 +10,6 @@
 
 #include "CompressorUnit.h"
 
-CompressorUnit::CompressorUnit(juce::AudioParameterFloat* attackParam,
-    juce::AudioParameterFloat* releaseParam,
-    juce::AudioParameterFloat* ratioParam,
-    juce::AudioParameterFloat* thresholdParam)
-    : attack(attackParam),
-    release(releaseParam),
-    ratio(ratioParam),
-    threshold(thresholdParam)
-{
-}
-
-void CompressorUnit::configure(juce::AudioParameterFloat* attackParam,
-    juce::AudioParameterFloat* releaseParam,
-    juce::AudioParameterFloat* ratioParam,
-    juce::AudioParameterFloat* thresholdParam)
-{
-    jassert(attack && release && ratio && threshold);
-
-    attack = attackParam;
-    release = releaseParam;
-    ratio = ratioParam;
-    threshold = thresholdParam;
-}
-
-
 void CompressorUnit::prepare(const juce::dsp::ProcessSpec& spec)
 {
     const double smootheningInSeconds = 0.0002;
@@ -45,10 +20,10 @@ void CompressorUnit::prepare(const juce::dsp::ProcessSpec& spec)
     ratioSmoothed.reset(spec.sampleRate, smootheningInSeconds);
     thresholdSmoothed.reset(spec.sampleRate, smootheningInSeconds);
 
-    attackSmoothed.setCurrentAndTargetValue(attack ? attack->get() : 50.f);
-    releaseSmoothed.setCurrentAndTargetValue(release ? release->get() : 55.0f);
-    ratioSmoothed.setCurrentAndTargetValue(ratio ? ratio->get() : 2.0f);
-    thresholdSmoothed.setCurrentAndTargetValue(threshold ? threshold->get() : -12.0f);
+    attackSmoothed.setCurrentAndTargetValue( 50.f);
+    releaseSmoothed.setCurrentAndTargetValue( 55.0f);
+    ratioSmoothed.setCurrentAndTargetValue( 2.0f);
+    thresholdSmoothed.setCurrentAndTargetValue( -12.0f);
 }
 
 void CompressorUnit::reset()
@@ -56,14 +31,14 @@ void CompressorUnit::reset()
     compressor.reset();
 }
 
-void CompressorUnit::updateCompressorSettings()
+void CompressorUnit::updateCompressorSettings(float attackMs, float releaseMs, float ratioVal, float thresholdDb)
 {
-    jassert(attack && release && ratio && threshold);
+    jassert(attackMs && releaseMs && ratioVal && thresholdDb);
 
-    compressor.setAttack(attack->get());
-    compressor.setRelease(release->get());
-    compressor.setRatio(ratio->get());
-    compressor.setThreshold(threshold->get());
+    attackSmoothed.setTargetValue(attackMs);
+    releaseSmoothed.setTargetValue(releaseMs);
+    ratioSmoothed.setTargetValue(ratioVal);
+    thresholdSmoothed.setTargetValue(thresholdDb);
 }
 
 void CompressorUnit::processCompression(juce::dsp::ProcessContextReplacing<float>& context)

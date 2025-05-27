@@ -67,6 +67,7 @@ public:
     Parameters params;
     CompressorUnit compA;
 
+
 private:
 
     juce::dsp::StateVariableTPTFilter<float> lowCutFilter;
@@ -79,13 +80,13 @@ private:
     bool  isBypassing = false;
 
     float controlAttackA = 50.0f;
-    float controlThresholdA = -12.f;
-    float compressReleaseA = 55.0f;
+    float compressThresholdA = -12.f;
+    float controlReleaseA = 55.0f;
     float compressRatioA = 2.0f;
 
     juce::LinearSmoothedValue<float> controlAttackASmoother = 50.0f;
-    juce::LinearSmoothedValue<float> controlThresholdASmoother = -12.f;
-    juce::LinearSmoothedValue<float> compressReleaseASmoother = 55.0f;
+    juce::LinearSmoothedValue<float> compressThresholdASmoother = -12.f;
+    juce::LinearSmoothedValue<float> controlReleaseASmoother = 55.0f;
     juce::LinearSmoothedValue<float> compressRatioASmoother = 2.0f;
 
 

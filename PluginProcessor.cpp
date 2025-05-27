@@ -100,6 +100,8 @@ void GuideLinesCompAudioProcessor::prepareToPlay (double sampleRate, int samples
 
     lowCutFilter.prepare(spec);
     lowCutFilter.reset();
+    compA.prepare(spec);
+    compA.reset();
 
     lastLowCut = -1.f;
 }
@@ -137,6 +139,7 @@ void GuideLinesCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
     params.update();
     params.smoothen();
     updateLowCutFilter();
+    updateMappedCompressorParameters();
 
     juce::AudioBuffer<float> mainInput = getBusBuffer(buffer, true, 0); // Input bus 0
     juce::AudioBuffer<float> mainOutput = getBusBuffer(buffer, false, 0); // Output bus 0
@@ -158,6 +161,7 @@ void GuideLinesCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
     juce::dsp::ProcessContextReplacing<float> ctx(block);
 
     lowCutFilter.process(ctx);
+    compA.processCompression(ctx);
 
     outputGainProcessor.setGainLinear(params.outputGain);
     outputGainProcessor.process(ctx);
@@ -244,4 +248,33 @@ void GuideLinesCompAudioProcessor::updateLowCutFilter()
         lowCutFilter.setCutoffFrequency(params.lowCut);
         lastLowCut = params.lowCut;
     }
+}
+
+
+void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
+{
+    float controlValue = juce::jlimit(0.0f, 100.0f, params.control);
+    float compressValue = juce::jlimit(0.0f, 100.0f, params.compression);
+
+    float mappedAttack = juce::jmap(controlValue, 0.0f, 100.0f, 50.0f, 0.5f);
+    float mappedThreshold = juce::jmap(compressValue, 0.0f, 100.0f, -12.0f, -30.0f);
+    float mappedRelease = juce::jmap(controlValue, 0.0f, 100.0f, 55.0f, 200.0f);
+    float mappedRatio = juce::jmap(compressValue, 0.0f, 100.0f, 2.0f, 10.0f);
+
+    controlAttackASmoother.setTargetValue(mappedAttack);
+    compressThresholdASmoother.setTargetValue(mappedThreshold);
+    controlReleaseASmoother.setTargetValue(mappedRelease);
+    compressRatioASmoother.setTargetValue(mappedRatio);
+
+    controlAttackA = mappedAttack;
+    compressThresholdA = mappedThreshold;
+    controlReleaseA = mappedRelease;
+    compressRatioA = mappedRatio;
+
+    compA.updateCompressorSettings(
+        controlAttackASmoother.getNextValue(),
+        controlReleaseASmoother.getNextValue(), 
+        compressRatioASmoother.getNextValue(),   
+        compressThresholdASmoother.getNextValue()
+    );
 }

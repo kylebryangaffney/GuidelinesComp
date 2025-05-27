@@ -17,27 +17,14 @@ class CompressorUnit
 {
 public:
     CompressorUnit() = default;
-    CompressorUnit(juce::AudioParameterFloat* attackParam,
-        juce::AudioParameterFloat* releaseParam,
-        juce::AudioParameterFloat* ratioParam,
-        juce::AudioParameterFloat* thresholdParam);
 
     void prepare(const juce::dsp::ProcessSpec& spec);
     void reset();
-    void updateCompressorSettings();
+    void updateCompressorSettings(float attackMs, float releaseMs, float ratioVal, float thresholdDb);
     void processCompression(juce::dsp::ProcessContextReplacing<float>& context);
-    void configure(juce::AudioParameterFloat* attackParam,
-        juce::AudioParameterFloat* releaseParam,
-        juce::AudioParameterFloat* ratioParam,
-        juce::AudioParameterFloat* thresholdParam);
 
 private:
     juce::dsp::Compressor<float> compressor;
-
-    juce::AudioParameterFloat* attack;
-    juce::AudioParameterFloat* release;
-    juce::AudioParameterFloat* ratio;
-    juce::AudioParameterFloat* threshold;
 
     juce::LinearSmoothedValue<float> attackSmoothed;
     juce::LinearSmoothedValue<float> releaseSmoothed;
