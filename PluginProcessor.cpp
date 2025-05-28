@@ -253,13 +253,17 @@ void GuideLinesCompAudioProcessor::updateLowCutFilter()
 
 void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
 {
-    float controlValue = juce::jlimit(0.0f, 100.0f, params.control);
-    float compressValue = juce::jlimit(0.0f, 100.0f, params.compression);
 
-    float mappedAttack = juce::jmap(controlValue, 0.0f, 100.0f, 50.0f, 0.5f);
-    float mappedThreshold = juce::jmap(compressValue, 0.0f, 100.0f, -12.0f, -30.0f);
-    float mappedRelease = juce::jmap(controlValue, 0.0f, 100.0f, 55.0f, 200.0f);
-    float mappedRatio = juce::jmap(compressValue, 0.0f, 100.0f, 2.0f, 10.0f);
+    float controlValue = juce::jlimit(0.001f, 100.0f, params.control);
+    float compressValue = juce::jlimit(0.001f, 100.0f, params.compression);
+
+    float normControl = controlValue / 100.0f;
+    normControl = juce::jlimit(0.001f, 1.0f, 1.0f - normControl);
+
+    float mappedAttack = juce::mapFromLog10(normControl, 80.0f, 1.0f);
+    float mappedRelease = juce::jmap(controlValue, 0.0f, 100.0f, 55.0f, 125.0f);
+    float mappedThreshold = juce::jmap(compressValue,0.0f, 100.0f, -12.0f, -24.0f);
+    float mappedRatio = juce::jmap(compressValue, 0.0f, 100.0f, 2.0f, 12.0f);
 
     controlAttackASmoother.setTargetValue(mappedAttack);
     compressThresholdASmoother.setTargetValue(mappedThreshold);
@@ -275,6 +279,10 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
         controlAttackASmoother.getNextValue(),
         controlReleaseASmoother.getNextValue(), 
         compressRatioASmoother.getNextValue(),   
-        compressThresholdASmoother.getNextValue()
-    );
+        compressThresholdASmoother.getNextValue());
+    DBG("Attack: " << mappedAttack
+        << ", Release: " << mappedRelease
+        << ", Threshold: " << mappedThreshold
+        << ", Ratio: " << mappedRatio
+        << "test two");
 }

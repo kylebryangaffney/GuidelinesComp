@@ -18,6 +18,34 @@ static void castParameter(juce::AudioProcessorValueTreeState& apvts,
     jassert(destination);
 }
 
+static juce::String stringFromHz(float value, int)
+{
+    if (value < 1000.f)       return juce::String(int(value)) + " Hz";
+    else if (value < 10000.f) return juce::String(value / 1000.f, 2) + " kHz";
+    else                      return juce::String(value / 1000.f, 1) + " kHz";
+}
+
+static float hzFromString(const juce::String& str)
+{
+    float value = str.getFloatValue();
+    return value < 20.f ? value * 1000.f : value;
+}
+
+
+static juce::String stringFromDecimal(float value, int)
+{
+    return juce::String(value, 3);
+}
+
+static float decimalFromString(const juce::String& str)
+{
+    return str.getFloatValue();
+}
+
+static juce::String stringFromDecibels(float value, int)
+{
+    return juce::String(value, 1) + " dB";
+}
 
 Parameters::Parameters(juce::AudioProcessorValueTreeState& apvts)
 {
@@ -37,14 +65,14 @@ juce::AudioProcessorValueTreeState::ParameterLayout Parameters::createParameterL
         controlParamID, "Control",
         juce::NormalisableRange<float>{ 0.0f, 100.0f },
         0.f,
-        juce::AudioParameterFloatAttributes()
+        juce::AudioParameterFloatAttributes().withStringFromValueFunction(stringFromDecimal).withValueFromStringFunction(decimalFromString)
     ));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         compressionParamID, "Compression",
         juce::NormalisableRange<float>{ 0.0f, 100.0f },
         0.f,
-        juce::AudioParameterFloatAttributes()
+        juce::AudioParameterFloatAttributes().withStringFromValueFunction(stringFromDecimal).withValueFromStringFunction(decimalFromString)
     ));
 
 
@@ -52,14 +80,15 @@ juce::AudioProcessorValueTreeState::ParameterLayout Parameters::createParameterL
         lowCutParamID, "Low Cut",
         juce::NormalisableRange<float>{ 20.f, 1000.f, 1.f, 0.3f },
         20.f,
-        juce::AudioParameterFloatAttributes()
+        juce::AudioParameterFloatAttributes().withStringFromValueFunction(stringFromHz)
+        .withValueFromStringFunction(hzFromString)
     ));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         outputGainParamID, "Output Gain",
         juce::NormalisableRange<float>{ -18.f, 12.f },
         0.f,
-        juce::AudioParameterFloatAttributes()
+        juce::AudioParameterFloatAttributes().withStringFromValueFunction(stringFromDecibels)
     ));
 
     layout.add(std::make_unique<juce::AudioParameterBool>(
