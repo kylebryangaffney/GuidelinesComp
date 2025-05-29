@@ -1,38 +1,47 @@
 /*
   ==============================================================================
 
-    CompressorUnit.h
-    Created: 27 May 2025 8:30:48am
+    OptoCompressorUnit.h
+    Created: 29 May 2025 8:51:19am
     Author:  kyleb
 
   ==============================================================================
 */
+
 
 #pragma once
 
 #include <JuceHeader.h>
 
 
-class CompressorUnit
+class OptoCompressorUnit
 {
 public:
-    CompressorUnit() = default;
+    OptoCompressorUnit() = default;
 
     void prepare(const juce::dsp::ProcessSpec& spec);
     void reset();
-    void updateCompressorSettings(float attackMs, float releaseMs, float ratioVal, float thresholdDb);
     void processCompression(juce::dsp::AudioBlock<float> block);
 
 private:
-    juce::dsp::Compressor<float> compressor;
-
-    const double smootheningInSeconds = 0.0002; // reaction time
+    juce::dsp::Gain<float> optoGain;
 
     juce::LinearSmoothedValue<float> attackSmoothed;
     juce::LinearSmoothedValue<float> releaseSmoothed;
     juce::LinearSmoothedValue<float> ratioSmoothed;
     juce::LinearSmoothedValue<float> thresholdSmoothed;
+    juce::LinearSmoothedValue<float> smoothedGain;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorUnit)
+
+    const double optoSmoothingTime = 0.1;
+
+    float fixedAttack = 15.0f;
+    float fixedRelease = 120.0f;
+    float fixedRatio = 5.0f;
+    float fixedThreshold = -19.0f;
+
+    float calculatePeakOrRMS(juce::dsp::AudioBlock<float> block);
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OptoCompressorUnit)
 
 };

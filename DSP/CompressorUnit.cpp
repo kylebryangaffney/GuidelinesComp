@@ -12,7 +12,6 @@
 
 void CompressorUnit::prepare(const juce::dsp::ProcessSpec& spec)
 {
-    const double smootheningInSeconds = 0.0002;
     compressor.prepare(spec);
 
     attackSmoothed.reset(spec.sampleRate, smootheningInSeconds);
@@ -41,12 +40,14 @@ void CompressorUnit::updateCompressorSettings(float attackMs, float releaseMs, f
     thresholdSmoothed.setTargetValue(thresholdDb);
 }
 
-void CompressorUnit::processCompression(juce::dsp::ProcessContextReplacing<float>& context)
+void CompressorUnit::processCompression(juce::dsp::AudioBlock<float> block)
 {
+    juce::dsp::ProcessContextReplacing<float> ctx(block);
+
     compressor.setAttack(attackSmoothed.getNextValue());
     compressor.setRelease(releaseSmoothed.getNextValue());
     compressor.setRatio(ratioSmoothed.getNextValue());
     compressor.setThreshold(thresholdSmoothed.getNextValue());
 
-    compressor.process(context);
+    compressor.process(ctx);
 }

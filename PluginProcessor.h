@@ -14,6 +14,7 @@
 #include "Service/Parameters.h"
 #include "Service/ProtectYourEars.h"
 #include "DSP/CompressorUnit.h"
+#include "DSP/OptoCompressorUnit.h"
 
 
 //==============================================================================
@@ -66,7 +67,7 @@ public:
 
     Parameters params;
     CompressorUnit compA;
-
+    OptoCompressorUnit compB;
 
 private:
 

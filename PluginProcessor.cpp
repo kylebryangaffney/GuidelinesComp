@@ -103,6 +103,9 @@ void GuideLinesCompAudioProcessor::prepareToPlay (double sampleRate, int samples
     compA.prepare(spec);
     compA.reset();
 
+    compB.prepare(spec);
+    compB.reset();
+
     lastLowCut = -1.f;
 }
 
@@ -158,13 +161,14 @@ void GuideLinesCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffe
         mainOutput.copyFrom(ch, 0, mainInput, ch, 0, numSamples);
 
     juce::dsp::AudioBlock<float>  block(mainOutput);
-    juce::dsp::ProcessContextReplacing<float> ctx(block);
+    //juce::dsp::ProcessContextReplacing<float> ctx(block);
 
-    lowCutFilter.process(ctx);
-    compA.processCompression(ctx);
+    lowCutFilter.process(block);
+    compA.processCompression(block);
+    compB.processCompression(block);
 
     outputGainProcessor.setGainLinear(params.outputGain);
-    outputGainProcessor.process(ctx);
+    outputGainProcessor.process(block);
 
 #if JUCE_DEBUG
     protectYourEars(buffer);
@@ -280,9 +284,9 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
         controlReleaseASmoother.getNextValue(), 
         compressRatioASmoother.getNextValue(),   
         compressThresholdASmoother.getNextValue());
-    DBG("Attack: " << mappedAttack
-        << ", Release: " << mappedRelease
-        << ", Threshold: " << mappedThreshold
-        << ", Ratio: " << mappedRatio
-        << "test two");
+    //DBG("Attack: " << mappedAttack
+    //    << ", Release: " << mappedRelease
+    //    << ", Threshold: " << mappedThreshold
+    //    << ", Ratio: " << mappedRatio
+    //    << "test two");
 }
