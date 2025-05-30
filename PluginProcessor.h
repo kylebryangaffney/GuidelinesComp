@@ -20,7 +20,7 @@
 //==============================================================================
 /**
 */
-class GuideLinesCompAudioProcessor  : public juce::AudioProcessor
+class GuideLinesCompAudioProcessor : public juce::AudioProcessor
 {
 public:
     //==============================================================================
@@ -28,14 +28,14 @@ public:
     ~GuideLinesCompAudioProcessor() override;
 
     //==============================================================================
-    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
-   #ifndef JucePlugin_PreferredChannelConfigurations
-    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
-   #endif
+#ifndef JucePlugin_PreferredChannelConfigurations
+    bool isBusesLayoutSupported(const BusesLayout& layouts) const override;
+#endif
 
-    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+    void processBlock(juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -52,13 +52,13 @@ public:
     //==============================================================================
     int getNumPrograms() override;
     int getCurrentProgram() override;
-    void setCurrentProgram (int index) override;
-    const juce::String getProgramName (int index) override;
-    void changeProgramName (int index, const juce::String& newName) override;
+    void setCurrentProgram(int index) override;
+    const juce::String getProgramName(int index) override;
+    void changeProgramName(int index, const juce::String& newName) override;
 
     //==============================================================================
-    void getStateInformation (juce::MemoryBlock& destData) override;
-    void setStateInformation (const void* data, int sizeInBytes) override;
+    void getStateInformation(juce::MemoryBlock& destData) override;
+    void setStateInformation(const void* data, int sizeInBytes) override;
     juce::AudioProcessorParameter* getBypassParameter() const override;
 
     juce::AudioProcessorValueTreeState apvts{
@@ -85,17 +85,26 @@ private:
     float controlReleaseA = 55.0f;
     float compressRatioA = 2.0f;
 
+    std::atomic<float> rmsInputLevelDb{ 0.0f };
+    std::atomic<float> compAGainReductionDb{ 0.0f };
+    std::atomic<float> rmsInterstageLevelDb{ 0.0f };
+    std::atomic<float> compBGainReductionDb{ 0.0f };
+    std::atomic<float> rmsOutputLevelDb{ 0.0f };
+    std::atomic<float> totalGainReductionDb{ 0.0f };
+
     juce::LinearSmoothedValue<float> controlAttackASmoother = 50.0f;
     juce::LinearSmoothedValue<float> compressThresholdASmoother = -12.f;
     juce::LinearSmoothedValue<float> controlReleaseASmoother = 55.0f;
     juce::LinearSmoothedValue<float> compressRatioASmoother = 2.0f;
 
-
     void initializeProcessing(juce::AudioBuffer<float>& buffer);
+    float computeRMSLevel(const juce::AudioBuffer<float>& buffer);
+
     void updateBypassState();
     void updateBypassFade();
     void updateLowCutFilter();
     void updateMappedCompressorParameters();
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GuideLinesCompAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuideLinesCompAudioProcessor)
 };
+

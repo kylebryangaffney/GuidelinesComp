@@ -32,29 +32,29 @@ const juce::String GuideLinesCompAudioProcessor::getName() const
 
 bool GuideLinesCompAudioProcessor::acceptsMidi() const
 {
-   #if JucePlugin_WantsMidiInput
+#if JucePlugin_WantsMidiInput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool GuideLinesCompAudioProcessor::producesMidi() const
 {
-   #if JucePlugin_ProducesMidiOutput
+#if JucePlugin_ProducesMidiOutput
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 bool GuideLinesCompAudioProcessor::isMidiEffect() const
 {
-   #if JucePlugin_IsMidiEffect
+#if JucePlugin_IsMidiEffect
     return true;
-   #else
+#else
     return false;
-   #endif
+#endif
 }
 
 double GuideLinesCompAudioProcessor::getTailLengthSeconds() const
@@ -65,7 +65,7 @@ double GuideLinesCompAudioProcessor::getTailLengthSeconds() const
 int GuideLinesCompAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
-                // so this should be at least 1, even if you're not really implementing programs.
+    // so this should be at least 1, even if you're not really implementing programs.
 }
 
 int GuideLinesCompAudioProcessor::getCurrentProgram()
@@ -73,21 +73,21 @@ int GuideLinesCompAudioProcessor::getCurrentProgram()
     return 0;
 }
 
-void GuideLinesCompAudioProcessor::setCurrentProgram (int index)
+void GuideLinesCompAudioProcessor::setCurrentProgram(int index)
 {
 }
 
-const juce::String GuideLinesCompAudioProcessor::getProgramName (int index)
+const juce::String GuideLinesCompAudioProcessor::getProgramName(int index)
 {
     return {};
 }
 
-void GuideLinesCompAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void GuideLinesCompAudioProcessor::changeProgramName(int index, const juce::String& newName)
 {
 }
 
 //==============================================================================
-void GuideLinesCompAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void GuideLinesCompAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
     params.prepareToPlay(sampleRate);
     params.reset();
@@ -116,7 +116,7 @@ void GuideLinesCompAudioProcessor::releaseResources()
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool GuideLinesCompAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool GuideLinesCompAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
 {
     const auto mono = juce::AudioChannelSet::mono();
     const auto stereo = juce::AudioChannelSet::stereo();
@@ -134,41 +134,58 @@ bool GuideLinesCompAudioProcessor::isBusesLayoutSupported (const BusesLayout& la
 }
 #endif
 
-void GuideLinesCompAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     initializeProcessing(buffer);
     updateBypassState();
+
+    // Measure input level BEFORE any processing
+    rmsInputLevelDb.store(computeRMSLevel(buffer));
 
     params.update();
     params.smoothen();
     updateLowCutFilter();
     updateMappedCompressorParameters();
 
-    juce::AudioBuffer<float> mainInput = getBusBuffer(buffer, true, 0); // Input bus 0
-    juce::AudioBuffer<float> mainOutput = getBusBuffer(buffer, false, 0); // Output bus 0
+    // Route input and output buses
+    juce::AudioBuffer<float> mainInput = getBusBuffer(buffer, true, 0);
+    juce::AudioBuffer<float> mainOutput = getBusBuffer(buffer, false, 0);
 
     const int numInputChannels = mainInput.getNumChannels();
     const int numOutputChannels = mainOutput.getNumChannels();
     const int numSamples = buffer.getNumSamples();
 
-
     // Clear unused output channels
     for (int ch = numInputChannels; ch < numOutputChannels; ++ch)
         mainOutput.clear(ch, 0, numSamples);
 
-    // Copy input to output for processing
+    // Copy input output for processing
     for (int ch = 0; ch < juce::jmin(numInputChannels, numOutputChannels); ++ch)
         mainOutput.copyFrom(ch, 0, mainInput, ch, 0, numSamples);
 
-    juce::dsp::AudioBlock<float>  block(mainOutput);
-    //juce::dsp::ProcessContextReplacing<float> ctx(block);
+    // Wrap mainOutput in a block for processing
+    juce::dsp::AudioBlock<float> block(mainOutput);
+    juce::dsp::ProcessContextReplacing<float> ctx(block);
 
-    lowCutFilter.process(block);
-    compA.processCompression(block);
+    // Process signal chain
+    lowCutFilter.process(ctx);
+    compA.processCompression(ctx);
+
+    // Measure level after compA
+    rmsInterstageLevelDb.store(computeRMSLevel(mainOutput));
+    compAGainReductionDb.store(rmsInputLevelDb.load() - rmsInterstageLevelDb.load());
+
     compB.processCompression(block);
 
+    // Measure final output
+    rmsOutputLevelDb.store(computeRMSLevel(mainOutput));
+    compBGainReductionDb.store(rmsInterstageLevelDb.load() - rmsOutputLevelDb.load());
+
+    totalGainReductionDb.store(rmsInputLevelDb.load() - rmsOutputLevelDb.load());
+
+    // Apply output gain
     outputGainProcessor.setGainLinear(params.outputGain);
-    outputGainProcessor.process(block);
+    outputGainProcessor.process(ctx);
 
 #if JUCE_DEBUG
     protectYourEars(buffer);
@@ -183,21 +200,23 @@ bool GuideLinesCompAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* GuideLinesCompAudioProcessor::createEditor()
 {
-    return new GuideLinesCompAudioProcessorEditor (*this);
+    return new GuideLinesCompAudioProcessorEditor(*this);
 }
 
 //==============================================================================
-void GuideLinesCompAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void GuideLinesCompAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
+    juce::MemoryOutputStream mos(destData, true);
+    apvts.state.writeToStream(mos);
 }
 
-void GuideLinesCompAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void GuideLinesCompAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if (tree.isValid())
+    {
+        apvts.replaceState(tree);
+    }
 }
 
 //==============================================================================
@@ -257,7 +276,6 @@ void GuideLinesCompAudioProcessor::updateLowCutFilter()
 
 void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
 {
-
     float controlValue = juce::jlimit(0.001f, 100.0f, params.control);
     float compressValue = juce::jlimit(0.001f, 100.0f, params.compression);
 
@@ -266,7 +284,7 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
 
     float mappedAttack = juce::mapFromLog10(normControl, 80.0f, 1.0f);
     float mappedRelease = juce::jmap(controlValue, 0.0f, 100.0f, 55.0f, 125.0f);
-    float mappedThreshold = juce::jmap(compressValue,0.0f, 100.0f, -12.0f, -24.0f);
+    float mappedThreshold = juce::jmap(compressValue, 0.0f, 100.0f, -12.0f, -24.0f);
     float mappedRatio = juce::jmap(compressValue, 0.0f, 100.0f, 2.0f, 12.0f);
 
     controlAttackASmoother.setTargetValue(mappedAttack);
@@ -281,12 +299,34 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
 
     compA.updateCompressorSettings(
         controlAttackASmoother.getNextValue(),
-        controlReleaseASmoother.getNextValue(), 
-        compressRatioASmoother.getNextValue(),   
+        controlReleaseASmoother.getNextValue(),
+        compressRatioASmoother.getNextValue(),
         compressThresholdASmoother.getNextValue());
     //DBG("Attack: " << mappedAttack
     //    << ", Release: " << mappedRelease
     //    << ", Threshold: " << mappedThreshold
-    //    << ", Ratio: " << mappedRatio
-    //    << "test two");
+    //    << ", Ratio: " << mappedRatio);
+}
+
+float GuideLinesCompAudioProcessor::computeRMSLevel(const juce::AudioBuffer<float>& buffer)
+{
+    const int numChannels = buffer.getNumChannels();
+    const int numSamples = buffer.getNumSamples();
+
+    float sumOfSquares = 0.0f;
+
+    for (int chan = 0; chan < numChannels; ++chan)
+    {
+        const float* channelData = buffer.getReadPointer(chan);
+        for (int i = 0; i < numSamples; ++i)
+        {
+            float sample = channelData[i];
+            sumOfSquares += sample * sample;
+        }
+    }
+
+    const float meanSquare = sumOfSquares / (numChannels * numSamples);
+    const float rms = std::sqrt(meanSquare);
+
+    return juce::Decibels::gainToDecibels(rms, -100.0f);
 }

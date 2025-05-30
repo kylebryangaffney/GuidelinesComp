@@ -38,11 +38,11 @@ void OptoCompressorUnit::reset()
 }
 
 
-void OptoCompressorUnit::processCompression(juce::dsp::AudioBlock<float> block)
+void OptoCompressorUnit::processCompression(juce::dsp::ProcessContextReplacing<float> context)
 {
-    juce::dsp::ProcessContextReplacing<float> context = juce::dsp::ProcessContextReplacing<float>(block);
+    const juce::dsp::AudioBlock<float>& block = context.getOutputBlock();
 
-    float inputLevelDb = calculatePeakOrRMS(block);
+    float inputLevelDb = calculateRMS(block);
 
     float overshootDb = inputLevelDb - thresholdSmoothed.getNextValue();
     float gainReductionDb = (overshootDb > 0.0f) ? overshootDb * (1.0f - 1.0f / ratioSmoothed.getNextValue()) : 0.0f;
@@ -51,9 +51,10 @@ void OptoCompressorUnit::processCompression(juce::dsp::AudioBlock<float> block)
     smoothedGain.setTargetValue(linearGain);
     optoGain.setGainLinear(smoothedGain.getNextValue());
     optoGain.process(context);
+
 }
 
-float OptoCompressorUnit::calculatePeakOrRMS(juce::dsp::AudioBlock<float> block)
+float OptoCompressorUnit::calculateRMS(juce::dsp::AudioBlock<float> block)
 {
     int numChannels = static_cast<int>(block.getNumChannels());
     int numSamples = static_cast<int>(block.getNumSamples());

@@ -21,7 +21,7 @@ public:
 
     void prepare(const juce::dsp::ProcessSpec& spec);
     void reset();
-    void processCompression(juce::dsp::AudioBlock<float> block);
+    void processCompression(juce::dsp::ProcessContextReplacing<float> context);
 
 private:
     juce::dsp::Gain<float> optoGain;
@@ -32,15 +32,14 @@ private:
     juce::LinearSmoothedValue<float> thresholdSmoothed;
     juce::LinearSmoothedValue<float> smoothedGain;
 
-
     const double optoSmoothingTime = 0.1;
 
     float fixedAttack = 15.0f;
     float fixedRelease = 120.0f;
     float fixedRatio = 5.0f;
-    float fixedThreshold = -19.0f;
+    float fixedThreshold = -20.0f;
 
-    float calculatePeakOrRMS(juce::dsp::AudioBlock<float> block);
+    float calculateRMS(juce::dsp::AudioBlock<float> block);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(OptoCompressorUnit)
 

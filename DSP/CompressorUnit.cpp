@@ -40,14 +40,12 @@ void CompressorUnit::updateCompressorSettings(float attackMs, float releaseMs, f
     thresholdSmoothed.setTargetValue(thresholdDb);
 }
 
-void CompressorUnit::processCompression(juce::dsp::AudioBlock<float> block)
+void CompressorUnit::processCompression(juce::dsp::ProcessContextReplacing<float> context)
 {
-    juce::dsp::ProcessContextReplacing<float> ctx(block);
-
     compressor.setAttack(attackSmoothed.getNextValue());
     compressor.setRelease(releaseSmoothed.getNextValue());
     compressor.setRatio(ratioSmoothed.getNextValue());
     compressor.setThreshold(thresholdSmoothed.getNextValue());
 
-    compressor.process(ctx);
+    compressor.process(context);
 }

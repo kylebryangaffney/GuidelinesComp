@@ -21,7 +21,7 @@ public:
     void prepare(const juce::dsp::ProcessSpec& spec);
     void reset();
     void updateCompressorSettings(float attackMs, float releaseMs, float ratioVal, float thresholdDb);
-    void processCompression(juce::dsp::AudioBlock<float> block);
+    void processCompression(juce::dsp::ProcessContextReplacing<float> context);
 
 private:
     juce::dsp::Compressor<float> compressor;
@@ -32,6 +32,11 @@ private:
     juce::LinearSmoothedValue<float> releaseSmoothed;
     juce::LinearSmoothedValue<float> ratioSmoothed;
     juce::LinearSmoothedValue<float> thresholdSmoothed;
+
+    std::atomic<float> rmsInputLevelDb{ -100.0f };
+    std::atomic<float> rmsOutputLevelDb{ -100.0f };
+
+    float calculateRMS(juce::dsp::AudioBlock<float> block);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorUnit)
 
