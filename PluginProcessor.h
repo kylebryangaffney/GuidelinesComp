@@ -92,10 +92,11 @@ private:
     std::atomic<float> rmsOutputLevelDb{ 0.0f };
     std::atomic<float> totalGainReductionDb{ 0.0f };
 
+    juce::LinearSmoothedValue<float> compressInputGainSmoother = 1.0f;
     juce::LinearSmoothedValue<float> controlAttackASmoother = 50.0f;
-    juce::LinearSmoothedValue<float> compressThresholdASmoother = -12.f;
-    juce::LinearSmoothedValue<float> controlReleaseASmoother = 55.0f;
+    juce::LinearSmoothedValue<float> controlThresholdASmoother = -12.f;
     juce::LinearSmoothedValue<float> compressRatioASmoother = 2.0f;
+    juce::LinearSmoothedValue<float> controlReleaseASmoother = 55.0f;
 
     void initializeProcessing(juce::AudioBuffer<float>& buffer);
     float computeRMSLevel(const juce::AudioBuffer<float>& buffer);

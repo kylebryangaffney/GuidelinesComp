@@ -37,7 +37,7 @@ private:
     float fixedAttack = 15.0f;
     float fixedRelease = 120.0f;
     float fixedRatio = 5.0f;
-    float fixedThreshold = -20.0f;
+    float fixedThreshold = -18.0f;
 
     float calculateRMS(juce::dsp::AudioBlock<float> block);
 

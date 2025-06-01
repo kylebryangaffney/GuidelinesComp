@@ -139,9 +139,6 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     initializeProcessing(buffer);
     updateBypassState();
 
-    // Measure input level BEFORE any processing
-    rmsInputLevelDb.store(computeRMSLevel(buffer));
-
     params.update();
     params.smoothen();
     updateLowCutFilter();
@@ -167,6 +164,12 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     juce::dsp::AudioBlock<float> block(mainOutput);
     juce::dsp::ProcessContextReplacing<float> ctx(block);
 
+
+    buffer.applyGain(compressInputGainSmoother.getNextValue());
+
+    // Measure input level BEFORE any processing
+    rmsInputLevelDb.store(computeRMSLevel(buffer));
+
     // Process signal chain
     lowCutFilter.process(ctx);
     compA.processCompression(ctx);
@@ -175,7 +178,7 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     rmsInterstageLevelDb.store(computeRMSLevel(mainOutput));
     compAGainReductionDb.store(rmsInputLevelDb.load() - rmsInterstageLevelDb.load());
 
-    compB.processCompression(block);
+    compB.processCompression(ctx);
 
     // Measure final output
     rmsOutputLevelDb.store(computeRMSLevel(mainOutput));
@@ -273,39 +276,53 @@ void GuideLinesCompAudioProcessor::updateLowCutFilter()
     }
 }
 
-
 void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
 {
+    //--- Raw parameter inputs ---
     float controlValue = juce::jlimit(0.001f, 100.0f, params.control);
     float compressValue = juce::jlimit(0.001f, 100.0f, params.compression);
 
+    //--- Normalized values ---
     float normControl = controlValue / 100.0f;
-    normControl = juce::jlimit(0.001f, 1.0f, 1.0f - normControl);
+    float normCompress = compressValue / 100.0f;
+    float attackNormControl = juce::jlimit(0.001f, 1.0f, 1.0f - normControl);
 
-    float mappedAttack = juce::mapFromLog10(normControl, 80.0f, 1.0f);
-    float mappedRelease = juce::jmap(controlValue, 0.0f, 100.0f, 55.0f, 125.0f);
-    float mappedThreshold = juce::jmap(compressValue, 0.0f, 100.0f, -12.0f, -24.0f);
+    //--- Input gain (tied to compression amount) ---
+    float inputGainDb = juce::jmap(normCompress, 0.0f, 12.0f);
+    float inputGainLin = juce::Decibels::decibelsToGain(inputGainDb);
+    compressInputGainSmoother.setTargetValue(inputGainLin);
+
+    //--- Compressor envelope shaping (tied to control) ---
+    float mappedAttack = juce::mapFromLog10(attackNormControl, 75.0f, 1.0f);
+    float mappedRelease = juce::jmap(controlValue, 0.0f, 100.0f, 55.0f, 100.0f);
+    float mappedThreshold = juce::jmap(controlValue, 0.0f, 100.0f, -12.0f, -24.0f);
+
+    //--- Ratio scaling (tied to compression amount) ---
     float mappedRatio = juce::jmap(compressValue, 0.0f, 100.0f, 2.0f, 12.0f);
 
+    //--- Apply smoothed values ---
     controlAttackASmoother.setTargetValue(mappedAttack);
-    compressThresholdASmoother.setTargetValue(mappedThreshold);
     controlReleaseASmoother.setTargetValue(mappedRelease);
+    controlThresholdASmoother.setTargetValue(mappedThreshold);
     compressRatioASmoother.setTargetValue(mappedRatio);
 
+    //--- Update visible state ---
     controlAttackA = mappedAttack;
-    compressThresholdA = mappedThreshold;
     controlReleaseA = mappedRelease;
+    compressThresholdA = mappedThreshold;
     compressRatioA = mappedRatio;
 
+    //--- Push to compressor ---
     compA.updateCompressorSettings(
         controlAttackASmoother.getNextValue(),
         controlReleaseASmoother.getNextValue(),
         compressRatioASmoother.getNextValue(),
-        compressThresholdASmoother.getNextValue());
-    //DBG("Attack: " << mappedAttack
-    //    << ", Release: " << mappedRelease
-    //    << ", Threshold: " << mappedThreshold
-    //    << ", Ratio: " << mappedRatio);
+        controlThresholdASmoother.getNextValue());
+
+    // DBG("Attack: " << mappedAttack
+    //     << ", Release: " << mappedRelease
+    //     << ", Threshold: " << mappedThreshold
+    //     << ", Ratio: " << mappedRatio);
 }
 
 float GuideLinesCompAudioProcessor::computeRMSLevel(const juce::AudioBuffer<float>& buffer)

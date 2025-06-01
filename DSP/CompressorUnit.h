@@ -36,8 +36,6 @@ private:
     std::atomic<float> rmsInputLevelDb{ -100.0f };
     std::atomic<float> rmsOutputLevelDb{ -100.0f };
 
-    float calculateRMS(juce::dsp::AudioBlock<float> block);
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorUnit)
 
 };
