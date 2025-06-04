@@ -287,17 +287,17 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
     float normCompress = compressValue / 100.0f;
     float attackNormControl = juce::jlimit(0.001f, 1.0f, 1.0f - normControl);
 
-    //--- Input gain (tied to compression amount) ---
+    //--- Input gain (from compression value) ---
     float inputGainDb = juce::jmap(normCompress, 0.0f, 12.0f);
     float inputGainLin = juce::Decibels::decibelsToGain(inputGainDb);
     compressInputGainSmoother.setTargetValue(inputGainLin);
 
-    //--- Compressor envelope shaping (tied to control) ---
+    //--- Compressor envelope shaping (from control value) ---
     float mappedAttack = juce::mapFromLog10(attackNormControl, 75.0f, 1.0f);
     float mappedRelease = juce::jmap(controlValue, 0.0f, 100.0f, 55.0f, 100.0f);
     float mappedThreshold = juce::jmap(controlValue, 0.0f, 100.0f, -12.0f, -24.0f);
 
-    //--- Ratio scaling (tied to compression amount) ---
+    //--- Ratio scaling (from compression value) ---
     float mappedRatio = juce::jmap(compressValue, 0.0f, 100.0f, 2.0f, 12.0f);
 
     //--- Apply smoothed values ---
@@ -312,17 +312,17 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
     compressThresholdA = mappedThreshold;
     compressRatioA = mappedRatio;
 
-    //--- Push to compressor ---
+    //--- Input to compressor ---
     compA.updateCompressorSettings(
         controlAttackASmoother.getNextValue(),
         controlReleaseASmoother.getNextValue(),
         compressRatioASmoother.getNextValue(),
         controlThresholdASmoother.getNextValue());
 
-    // DBG("Attack: " << mappedAttack
-    //     << ", Release: " << mappedRelease
-    //     << ", Threshold: " << mappedThreshold
-    //     << ", Ratio: " << mappedRatio);
+     DBG("Attack: " << mappedAttack
+         << ", Release: " << mappedRelease
+         << ", Threshold: " << mappedThreshold
+         << ", Ratio: " << mappedRatio);
 }
 
 float GuideLinesCompAudioProcessor::computeRMSLevel(const juce::AudioBuffer<float>& buffer)
