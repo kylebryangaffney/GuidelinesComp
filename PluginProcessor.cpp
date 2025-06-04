@@ -298,7 +298,7 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
     float mappedThreshold = juce::jmap(controlValue, 0.0f, 100.0f, -12.0f, -24.0f);
 
     //--- Ratio scaling (from compression value) ---
-    float mappedRatio = juce::jmap(compressValue, 0.0f, 100.0f, 2.0f, 12.0f);
+    float mappedRatio = juce::jmap(compressValue, 0.0f, 100.0f, 2.0f, 10.0f);
 
     //--- Apply smoothed values ---
     controlAttackASmoother.setTargetValue(mappedAttack);
