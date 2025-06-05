@@ -17,20 +17,29 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
 
     lowCutKnob = std::make_unique<RotaryKnob>("Low Cut", p.apvts, lowCutParamID);
     controlKnob = std::make_unique<RotaryKnob>("Control", p.apvts, controlParamID);
-    compressionKnob = std::make_unique<RotaryKnob>("Compression", p.apvts, compressionParamID);
+    compressionKnob = std::make_unique<RotaryKnob>("Compress", p.apvts, compressionParamID);
+    outputGainKnob = std::make_unique<RotaryKnob>("Output", p.apvts, outputGainParamID);
 
+    // Control group
+    //controlGroup.setText("Controls");
+    //controlGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     controlGroup.addAndMakeVisible(*lowCutKnob);
     controlGroup.addAndMakeVisible(*controlKnob);
     controlGroup.addAndMakeVisible(*compressionKnob);
-
-    // Control group
-    controlGroup.setText("Controls");
-    controlGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
-
     addAndMakeVisible(controlGroup);
 
+    // Output group
+    //outputGroup.setText("Output");
+    //outputGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    outputGroup.addAndMakeVisible(*outputGainKnob);
+    addAndMakeVisible(outputGroup);
 
-    setSize(600, 500);
+    meterGroup.setText("Meters");
+    meterGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    addAndMakeVisible(meterGroup);
+
+
+    setSize(330, 450);
 }
 
 GuideLinesCompAudioProcessorEditor::~GuideLinesCompAudioProcessorEditor()
@@ -54,25 +63,26 @@ void GuideLinesCompAudioProcessorEditor::resized()
 
     int headerHeight = 50;
     int presetPanelHeight = 40;
-    int padding = 12;
+    int padding = 10;
     int y = headerHeight + presetPanelHeight + padding;
-
-    controlGroup.setBounds(10, y, 225, 235 - y - padding);
-
-    auto knobArea = controlGroup.getLocalBounds().reduced(10);
-
+    const int controlAndMeterWidth = 220;
+    const int outputWidth = 80;
     constexpr int knobWidth = 60;
     constexpr int knobHeight = 100;
     constexpr int knobSpacing = 10;
 
-    int controlX = knobArea.getX();
-    int controlY = knobArea.getY();
+    controlGroup.setBounds(padding, y, controlAndMeterWidth, 225 - y - padding);
+    auto controlGroupArea = controlGroup.getLocalBounds().reduced(padding);
+    int knobX = controlGroupArea.getX();
+    int knobY = controlGroupArea.getY();
 
-    lowCutKnob->setBounds(controlX, controlY, knobWidth, knobHeight);
-    controlX += knobWidth + knobSpacing;
+    lowCutKnob->setTopLeftPosition(knobX, knobY);
+    controlKnob->setTopLeftPosition(lowCutKnob->getRight() + padding, knobY);
+    compressionKnob->setTopLeftPosition(controlKnob->getRight() + padding, knobY);
 
-    controlKnob->setBounds(controlX, controlY, knobWidth, knobHeight);
-    controlX += knobWidth + knobSpacing;
+    outputGroup.setBounds(controlGroup.getRight() + padding, y, outputWidth, bounds.getHeight() - y - padding);
+    auto outputGroupArea = outputGroup.getLocalBounds().reduced(padding);
+    outputGainKnob->setTopLeftPosition(knobX, knobY);
 
-    compressionKnob->setBounds(controlX, controlY, knobWidth, knobHeight);
+    meterGroup.setBounds(10, controlGroup.getBottom() + padding, controlAndMeterWidth, 225 - padding);
 }
