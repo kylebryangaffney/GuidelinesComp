@@ -6,6 +6,12 @@
   ==============================================================================
 */
 
+
+/// add more space between knobs, groups, and meters. posibly make it all taller as well 
+/// 330, 450 is a good ratio, but needs to be bigger 
+
+
+
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -18,7 +24,7 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     lowCutKnob = std::make_unique<RotaryKnob>("Low Cut", p.apvts, lowCutParamID);
     controlKnob = std::make_unique<RotaryKnob>("Control", p.apvts, controlParamID);
     compressionKnob = std::make_unique<RotaryKnob>("Compress", p.apvts, compressionParamID);
-    outputGainKnob = std::make_unique<RotaryKnob>("Output", p.apvts, outputGainParamID);
+    outputGainKnob = std::make_unique<AsymmetricalRotaryKnob>("Output", p.apvts, outputGainParamID);
 
     // Control group
     //controlGroup.setText("Controls");

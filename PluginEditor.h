@@ -11,7 +11,8 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "GUI/LookAndFeel.h"
-#include "Gui/RotaryKnob.h"
+#include "GUI/RotaryKnob.h"
+#include "GUI/AsymmetricalRotaryKnob.h"
 
 //==============================================================================
 /**
@@ -31,7 +32,7 @@ private:
     std::unique_ptr<RotaryKnob> lowCutKnob;
     std::unique_ptr<RotaryKnob> controlKnob;
     std::unique_ptr<RotaryKnob> compressionKnob;
-    std::unique_ptr<RotaryKnob> outputGainKnob;
+    std::unique_ptr<AsymmetricalRotaryKnob> outputGainKnob;
 
     juce::GroupComponent controlGroup;
     juce::GroupComponent meterGroup;
