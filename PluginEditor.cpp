@@ -25,6 +25,13 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     controlKnob = std::make_unique<RotaryKnob>("Control", p.apvts, controlParamID);
     compressionKnob = std::make_unique<RotaryKnob>("Compress", p.apvts, compressionParamID);
     outputGainKnob = std::make_unique<AsymmetricalRotaryKnob>("Output", p.apvts, outputGainParamID);
+    inputMeter = std::make_unique<LevelMeter>(
+        p.peakInputLevelLeft, p.peakInputLevelRight,
+        p.rmsInputLevelLeft, p.rmsInputLevelRight);
+
+    outputMeter = std::make_unique<LevelMeter>(
+        p.peakOutputLevelLeft, p.peakOutputLevelRight,
+        p.rmsOutputLevelLeft, p.rmsOutputLevelRight);
 
     // Control group
     //controlGroup.setText("Controls");
@@ -38,10 +45,12 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     //outputGroup.setText("Output");
     //outputGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     outputGroup.addAndMakeVisible(*outputGainKnob);
+    outputGroup.addAndMakeVisible(*outputMeter);
     addAndMakeVisible(outputGroup);
 
     meterGroup.setText("Meters");
     meterGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    meterGroup.addAndMakeVisible(*inputMeter);
     addAndMakeVisible(meterGroup);
 
 
@@ -89,6 +98,8 @@ void GuideLinesCompAudioProcessorEditor::resized()
     outputGroup.setBounds(controlGroup.getRight() + padding, y, outputWidth, bounds.getHeight() - y - padding);
     auto outputGroupArea = outputGroup.getLocalBounds().reduced(padding);
     outputGainKnob->setTopLeftPosition(knobX, knobY);
+
+    outputMeter->setBounds(outputGroup.getWidth() - 45, 30, 30, outputGainKnob->getBottom() - 30);
 
     meterGroup.setBounds(10, controlGroup.getBottom() + padding, controlAndMeterWidth, 225 - padding);
 }

@@ -13,6 +13,7 @@
 #include "GUI/LookAndFeel.h"
 #include "GUI/RotaryKnob.h"
 #include "GUI/AsymmetricalRotaryKnob.h"
+#include "GUI/LevelMeter.h"
 
 //==============================================================================
 /**
@@ -33,6 +34,9 @@ private:
     std::unique_ptr<RotaryKnob> controlKnob;
     std::unique_ptr<RotaryKnob> compressionKnob;
     std::unique_ptr<AsymmetricalRotaryKnob> outputGainKnob;
+
+    std::unique_ptr<LevelMeter> inputMeter;
+    std::unique_ptr<LevelMeter> outputMeter;
 
     juce::GroupComponent controlGroup;
     juce::GroupComponent meterGroup;

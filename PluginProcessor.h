@@ -15,6 +15,8 @@
 #include "Service/ProtectYourEars.h"
 #include "DSP/CompressorUnit.h"
 #include "DSP/OptoCompressorUnit.h"
+#include "Service/Measurement.h"
+#include "Service/RmsMeasurement.h"
 
 
 //==============================================================================
@@ -69,6 +71,15 @@ public:
     CompressorUnit compA;
     OptoCompressorUnit compB;
 
+    RmsMeasurement rmsInputLevelLeft;
+    RmsMeasurement rmsInputLevelRight;
+    Measurement peakInputLevelRight;
+    Measurement peakInputLevelLeft;
+    RmsMeasurement rmsOutputLevelLeft;
+    RmsMeasurement rmsOutputLevelRight;
+    Measurement peakOutputLevelRight;
+    Measurement peakOutputLevelLeft;
+
 private:
 
     juce::dsp::StateVariableTPTFilter<float> lowCutFilter;
@@ -85,12 +96,14 @@ private:
     float controlReleaseA = 55.0f;
     float compressRatioA = 2.0f;
 
-    std::atomic<float> rmsInputLevelDb{ 0.0f };
-    std::atomic<float> compAGainReductionDb{ 0.0f };
-    std::atomic<float> rmsInterstageLevelDb{ 0.0f };
-    std::atomic<float> compBGainReductionDb{ 0.0f };
-    std::atomic<float> rmsOutputLevelDb{ 0.0f };
-    std::atomic<float> totalGainReductionDb{ 0.0f };
+    std::atomic<float> compAGainReductionDbLeft{ 0.0f };
+    std::atomic<float> compAGainReductionDbRight{ 0.0f };
+
+    RmsMeasurement rmsInterstageLevelLeft;
+    RmsMeasurement rmsInterstageLevelRight;
+
+    std::atomic<float> compBGainReductionDbLeft{ 0.0f };
+    std::atomic<float> compBGainReductionDbRight{ 0.0f };
 
     juce::LinearSmoothedValue<float> compressInputGainSmoother = 1.0f;
     juce::LinearSmoothedValue<float> controlAttackASmoother = 50.0f;
@@ -99,13 +112,17 @@ private:
     juce::LinearSmoothedValue<float> controlReleaseASmoother = 55.0f;
 
     void initializeProcessing(juce::AudioBuffer<float>& buffer);
-    float computeRMSLevel(const juce::AudioBuffer<float>& buffer);
 
     void updateBypassState();
     void updateBypassFade();
     void updateLowCutFilter();
     void updateMappedCompressorParameters();
+
+    void updateRMSLevels(const juce::AudioBuffer<float>& buffer, RmsMeasurement& rmsLevelLeft, RmsMeasurement& rmsLevelRight);
+    void updatePeakLevels(const juce::AudioBuffer<float>& buffer, Measurement& peakLevelLeft, Measurement& peakLevelRight);
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuideLinesCompAudioProcessor)
 };
+
 

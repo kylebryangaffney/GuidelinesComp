@@ -9,6 +9,7 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+
 //==============================================================================
 GuideLinesCompAudioProcessor::GuideLinesCompAudioProcessor() : AudioProcessor(
     BusesProperties()
@@ -156,7 +157,7 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     for (int ch = numInputChannels; ch < numOutputChannels; ++ch)
         mainOutput.clear(ch, 0, numSamples);
 
-    // Copy input output for processing
+    // Copy input to output for processing
     for (int ch = 0; ch < juce::jmin(numInputChannels, numOutputChannels); ++ch)
         mainOutput.copyFrom(ch, 0, mainInput, ch, 0, numSamples);
 
@@ -164,36 +165,38 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     juce::dsp::AudioBlock<float> block(mainOutput);
     juce::dsp::ProcessContextReplacing<float> ctx(block);
 
-
-    buffer.applyGain(compressInputGainSmoother.getNextValue());
+    mainOutput.applyGain(compressInputGainSmoother.getNextValue());
 
     // Measure input level BEFORE any processing
-    rmsInputLevelDb.store(computeRMSLevel(buffer));
+    updateRMSLevels(mainOutput, rmsInputLevelLeft, rmsInputLevelRight);
+    updatePeakLevels(mainOutput, peakInputLevelLeft, peakInputLevelRight);
 
     // Process signal chain
     lowCutFilter.process(ctx);
     compA.processCompression(ctx);
 
     // Measure level after compA
-    rmsInterstageLevelDb.store(computeRMSLevel(mainOutput));
-    compAGainReductionDb.store(rmsInputLevelDb.load() - rmsInterstageLevelDb.load());
+    updateRMSLevels(mainOutput, rmsInterstageLevelLeft, rmsInterstageLevelRight);
+    compAGainReductionDbLeft.store(rmsInterstageLevelLeft.readAndReset() - rmsInputLevelLeft.readAndReset());
+    compAGainReductionDbRight.store(rmsInterstageLevelRight.readAndReset() - rmsInputLevelRight.readAndReset());
 
     compB.processCompression(ctx);
-
-    // Measure final output
-    rmsOutputLevelDb.store(computeRMSLevel(mainOutput));
-    compBGainReductionDb.store(rmsInterstageLevelDb.load() - rmsOutputLevelDb.load());
-
-    totalGainReductionDb.store(rmsInputLevelDb.load() - rmsOutputLevelDb.load());
 
     // Apply output gain
     outputGainProcessor.setGainLinear(params.outputGain);
     outputGainProcessor.process(ctx);
 
+    // Measure final output
+    updateRMSLevels(mainOutput, rmsOutputLevelLeft, rmsOutputLevelRight);
+    updatePeakLevels(mainOutput, peakOutputLevelLeft, peakOutputLevelRight);
+    compBGainReductionDbLeft.store(rmsOutputLevelLeft.readAndReset() - rmsInterstageLevelLeft.readAndReset());
+    compBGainReductionDbRight.store(rmsOutputLevelRight.readAndReset() - rmsInterstageLevelRight.readAndReset());
+
 #if JUCE_DEBUG
     protectYourEars(buffer);
 #endif
 }
+
 
 //==============================================================================
 bool GuideLinesCompAudioProcessor::hasEditor() const
@@ -319,31 +322,51 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
         compressRatioASmoother.getNextValue(),
         controlThresholdASmoother.getNextValue());
 
-     DBG("Attack: " << mappedAttack
-         << ", Release: " << mappedRelease
-         << ", Threshold: " << mappedThreshold
-         << ", Ratio: " << mappedRatio);
+    DBG("Attack: " << mappedAttack
+        << ", Release: " << mappedRelease
+        << ", Threshold: " << mappedThreshold
+        << ", Ratio: " << mappedRatio);
 }
 
-float GuideLinesCompAudioProcessor::computeRMSLevel(const juce::AudioBuffer<float>& buffer)
+void GuideLinesCompAudioProcessor::updateRMSLevels(const juce::AudioBuffer<float>& buffer,
+    RmsMeasurement& rmsLevelLeft,
+    RmsMeasurement& rmsLevelRight)
 {
     const int numChannels = buffer.getNumChannels();
     const int numSamples = buffer.getNumSamples();
 
-    float sumOfSquares = 0.0f;
-
-    for (int chan = 0; chan < numChannels; ++chan)
+    for (int ch = 0; ch < numChannels; ++ch)
     {
-        const float* channelData = buffer.getReadPointer(chan);
+        const float* data = buffer.getReadPointer(ch);
         for (int i = 0; i < numSamples; ++i)
         {
-            float sample = channelData[i];
-            sumOfSquares += sample * sample;
+            float sample = data[i];
+            if (ch == 0)
+                rmsLevelLeft.update(sample);
+            else if (ch == 1)
+                rmsLevelRight.update(sample);
         }
     }
+}
 
-    const float meanSquare = sumOfSquares / (numChannels * numSamples);
-    const float rms = std::sqrt(meanSquare);
 
-    return juce::Decibels::gainToDecibels(rms, -100.0f);
+void GuideLinesCompAudioProcessor::updatePeakLevels(const juce::AudioBuffer<float>& buffer,
+    Measurement& peakLevelLeft,
+    Measurement& peakLevelRight)
+{
+    const int numChannels = buffer.getNumChannels();
+    const int numSamples = buffer.getNumSamples();
+
+    for (int ch = 0; ch < numChannels; ++ch)
+    {
+        const float* data = buffer.getReadPointer(ch);
+        for (int i = 0; i < numSamples; ++i)
+        {
+            float sample = data[i];
+            if (ch == 0)
+                peakLevelLeft.updateIfGreater(sample);
+            else if (ch == 1)
+                peakLevelRight.updateIfGreater(sample);
+        }
+    }
 }

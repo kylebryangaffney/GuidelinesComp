@@ -13,8 +13,8 @@
 
 
 //==============================================================================
-LevelMeter::LevelMeter(Measurement& measurementL_, Measurement& measurementR_,
-    RmsMeasurement& rmsMeasurementL_, RmsMeasurement& rmsMeasurementR_)
+LevelMeter::LevelMeter(const Measurement& measurementL_, const Measurement& measurementR_,
+    const RmsMeasurement& rmsMeasurementL_, const RmsMeasurement& rmsMeasurementR_)
     : measurementL(measurementL_), measurementR(measurementR_),
     rmsMeasurementL(rmsMeasurementL_), rmsMeasurementR(rmsMeasurementR_)
 {
@@ -42,8 +42,8 @@ void LevelMeter::paint(juce::Graphics& g)
 
     drawPeakLevel(g, dbLevelL, 0, 7);
     drawPeakLevel(g, dbLevelR, 9, 7);
-    drawRmsLevel(g, dbRmsLevelL, 0, 5);
-    drawRmsLevel(g, dbRmsLevelR, 9, 5);
+    drawRmsLevel(g, dbRmsLevelL, 1, 4);
+    drawRmsLevel(g, dbRmsLevelR, 10, 4);
 
     for (float db = maxdB; db >= mindB; db -= stepdB)
     {
@@ -65,8 +65,11 @@ void LevelMeter::resized()
 
 void LevelMeter::timerCallback()
 {
-    updateLevel(measurementL.readAndReset(), levelL, dbLevelL);
-    updateLevel(measurementR.readAndReset(), levelR, dbLevelR);
+    updateLevel(measurementL.getValue(), levelL, dbLevelL);
+    updateLevel(measurementR.getValue(), levelR, dbLevelR);
+    dbRmsLevelL = juce::Decibels::gainToDecibels(std::max(rmsMeasurementL.getValue(), clampLevel));
+    dbRmsLevelR = juce::Decibels::gainToDecibels(std::max(rmsMeasurementR.getValue(), clampLevel));
+
     repaint();
 }
 
