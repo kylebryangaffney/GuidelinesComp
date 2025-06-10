@@ -30,21 +30,26 @@ public:
 
 private:
 
-    std::unique_ptr<RotaryKnob> lowCutKnob;
-    std::unique_ptr<RotaryKnob> controlKnob;
-    std::unique_ptr<RotaryKnob> compressionKnob;
-    std::unique_ptr<AsymmetricalRotaryKnob> outputGainKnob;
+    MainLookAndFeel mainLF;
 
-    std::unique_ptr<LevelMeter> inputMeter;
-    std::unique_ptr<LevelMeter> outputMeter;
+    GuideLinesCompAudioProcessor& audioProcessor;
+    RotaryKnob lowCutKnob{ "Low Cut", audioProcessor.apvts, lowCutParamID };
+    RotaryKnob controlKnob{ "Control", audioProcessor.apvts, controlParamID };
+    RotaryKnob compressionKnob{ "Compress", audioProcessor.apvts, compressionParamID };
+    AsymmetricalRotaryKnob outputGainKnob{ "Output", audioProcessor.apvts, outputGainParamID };
+
+    LevelMeter inputMeter{
+        audioProcessor.peakInputLevelLeft, audioProcessor.peakInputLevelRight,
+        audioProcessor.rmsInputLevelLeft, audioProcessor.rmsInputLevelRight };
+
+    LevelMeter outputMeter{
+        audioProcessor.peakOutputLevelLeft, audioProcessor.peakOutputLevelRight,
+        audioProcessor.rmsOutputLevelLeft, audioProcessor.rmsOutputLevelRight };
 
     juce::GroupComponent controlGroup;
     juce::GroupComponent meterGroup;
     juce::GroupComponent outputGroup;
 
-    MainLookAndFeel mainLF;
-
-    GuideLinesCompAudioProcessor& audioProcessor;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuideLinesCompAudioProcessorEditor)
 };
