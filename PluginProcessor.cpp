@@ -135,6 +135,7 @@ bool GuideLinesCompAudioProcessor::isBusesLayoutSupported(const BusesLayout& lay
 }
 #endif
 
+
 void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     initializeProcessing(buffer);
@@ -161,36 +162,59 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     for (int ch = 0; ch < juce::jmin(numInputChannels, numOutputChannels); ++ch)
         mainOutput.copyFrom(ch, 0, mainInput, ch, 0, numSamples);
 
-    // Wrap mainOutput in a block for processing
+    // Wrap in DSP block
     juce::dsp::AudioBlock<float> block(mainOutput);
     juce::dsp::ProcessContextReplacing<float> ctx(block);
 
+    // Apply input gain
     mainOutput.applyGain(compressInputGainSmoother.getNextValue());
 
-    // Measure input level BEFORE any processing
+    // --- Measure RMS/Peak BEFORE processing ---
     updateRMSLevels(mainOutput, rmsInputLevelLeft, rmsInputLevelRight);
     updatePeakLevels(mainOutput, peakInputLevelLeft, peakInputLevelRight);
 
-    // Process signal chain
+    // Cache values for GR calc
+    float rmsInputL = rmsInputLevelLeft.readAndReset();
+    float rmsInputR = rmsInputLevelRight.readAndReset();
+
+    // --- Process Chain ---
     lowCutFilter.process(ctx);
     compA.processCompression(ctx);
 
-    // Measure level after compA
     updateRMSLevels(mainOutput, rmsInterstageLevelLeft, rmsInterstageLevelRight);
-    compAGainReductionDbLeft.store(rmsInterstageLevelLeft.readAndReset() - rmsInputLevelLeft.readAndReset());
-    compAGainReductionDbRight.store(rmsInterstageLevelRight.readAndReset() - rmsInputLevelRight.readAndReset());
+    float rmsInterL = rmsInterstageLevelLeft.readAndReset();
+    float rmsInterR = rmsInterstageLevelRight.readAndReset();
+
+    compAGainReductionDbLeft.store(
+        juce::Decibels::gainToDecibels(juce::jmax(rmsInterL, 1e-6f)) -
+        juce::Decibels::gainToDecibels(juce::jmax(rmsInputL, 1e-6f))
+    );
+
+    compAGainReductionDbRight.store(
+        juce::Decibels::gainToDecibels(juce::jmax(rmsInterR, 1e-6f)) -
+        juce::Decibels::gainToDecibels(juce::jmax(rmsInputR, 1e-6f))
+    );
 
     compB.processCompression(ctx);
 
-    // Apply output gain
     outputGainProcessor.setGainLinear(params.outputGain);
     outputGainProcessor.process(ctx);
 
-    // Measure final output
     updateRMSLevels(mainOutput, rmsOutputLevelLeft, rmsOutputLevelRight);
     updatePeakLevels(mainOutput, peakOutputLevelLeft, peakOutputLevelRight);
-    compBGainReductionDbLeft.store(rmsOutputLevelLeft.readAndReset() - rmsInterstageLevelLeft.readAndReset());
-    compBGainReductionDbRight.store(rmsOutputLevelRight.readAndReset() - rmsInterstageLevelRight.readAndReset());
+
+    float rmsOutputL = rmsOutputLevelLeft.readAndReset();
+    float rmsOutputR = rmsOutputLevelRight.readAndReset();
+
+    compBGainReductionDbLeft.store(
+        juce::Decibels::gainToDecibels(juce::jmax(rmsOutputL, 1e-6f)) -
+        juce::Decibels::gainToDecibels(juce::jmax(rmsInterL, 1e-6f))
+    );
+
+    compBGainReductionDbRight.store(
+        juce::Decibels::gainToDecibels(juce::jmax(rmsOutputR, 1e-6f)) -
+        juce::Decibels::gainToDecibels(juce::jmax(rmsInterR, 1e-6f))
+    );
 
 #if JUCE_DEBUG
     protectYourEars(buffer);

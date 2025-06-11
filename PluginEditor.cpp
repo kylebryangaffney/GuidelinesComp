@@ -72,6 +72,8 @@ void GuideLinesCompAudioProcessorEditor::resized()
     const int outputWidth = 80;
     constexpr int knobWidth = 60;
     constexpr int knobHeight = 100;
+    const int meterWidth = 45;
+    const int meterHeight = 160;
 
     controlGroup.setBounds(padding, y, controlAndMeterWidth, 225 - y - padding);
     auto controlGroupArea = controlGroup.getLocalBounds().reduced(padding);
@@ -84,7 +86,8 @@ void GuideLinesCompAudioProcessorEditor::resized()
 
     outputGroup.setBounds(controlGroup.getRight() + padding, y, outputWidth, bounds.getHeight() - y - padding);
     outputGainKnob.setTopLeftPosition(knobX, knobY);
+    outputMeter.setBounds(knobX, outputGainKnob.getBottom() + 42, meterWidth, meterHeight);
 
     meterGroup.setBounds(padding, controlGroup.getBottom() + padding, controlAndMeterWidth, 225 - padding);
-    //inputMeter.setBounds(knobWidth, 2 * padding, 30, 15);
+    inputMeter.setBounds(knobWidth, controlGroup.getBottom() - meterHeight - 25, meterWidth, meterHeight);
 }

@@ -59,8 +59,18 @@ void LevelMeter::paint(juce::Graphics& g)
 
 void LevelMeter::resized()
 {
-    maxPos = 4.f;
-    minPos = float(getHeight()) - 4.f;
+    const float height = float(getHeight());
+
+    if (height < 10.f)
+    {
+        maxPos = 4.f;
+        minPos = 10.f; // safe fallback
+    }
+    else
+    {
+        maxPos = 4.f;
+        minPos = height - 4.f;
+    }
 }
 
 void LevelMeter::timerCallback()
@@ -69,6 +79,7 @@ void LevelMeter::timerCallback()
     updateLevel(measurementR.getValue(), levelR, dbLevelR);
     dbRmsLevelL = juce::Decibels::gainToDecibels(std::max(rmsMeasurementL.getValue(), clampLevel));
     dbRmsLevelR = juce::Decibels::gainToDecibels(std::max(rmsMeasurementR.getValue(), clampLevel));
+
 
     repaint();
 }
@@ -89,8 +100,9 @@ void LevelMeter::drawMeterBar(juce::Graphics& g, float levelDB, int x, int width
     if (levelDB <= clampdB)
         return;
 
-    const int yStart = positionForLevel(levelDB);
-    const int yZero = positionForLevel(0.0f);
+    const int yStart = juce::jlimit(0, getHeight(), positionForLevel(levelDB));
+    const int yZero = juce::jlimit(0, getHeight(), positionForLevel(0.0f));
+
 
     if (yStart < yZero)
     {
@@ -112,20 +124,10 @@ void LevelMeter::drawMeterBar(juce::Graphics& g, float levelDB, int x, int width
 void LevelMeter::updateLevel(float newLevel, float& smoothedLevel, float& leveldB) const
 {
     if (newLevel > smoothedLevel)
-    {
         smoothedLevel = newLevel;
-    }
     else
-    {
         smoothedLevel += (newLevel - smoothedLevel) * decay;
-    }
 
-    if (smoothedLevel > clampLevel)
-    {
-        leveldB = juce::Decibels::gainToDecibels(smoothedLevel);
-    }
-    else
-    {
-        leveldB = clampdB;
-    }
+    leveldB = juce::Decibels::gainToDecibels(std::max(smoothedLevel, clampLevel));
+
 }
