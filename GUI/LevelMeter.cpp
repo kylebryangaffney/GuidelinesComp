@@ -13,8 +13,8 @@
 
 
 //==============================================================================
-LevelMeter::LevelMeter(const Measurement& measurementL_, const Measurement& measurementR_,
-    const RmsMeasurement& rmsMeasurementL_, const RmsMeasurement& rmsMeasurementR_)
+LevelMeter::LevelMeter(Measurement& measurementL_, Measurement& measurementR_,
+    RmsMeasurement& rmsMeasurementL_, RmsMeasurement& rmsMeasurementR_)
     : measurementL(measurementL_), measurementR(measurementR_),
     rmsMeasurementL(rmsMeasurementL_), rmsMeasurementR(rmsMeasurementR_)
 {
@@ -75,11 +75,11 @@ void LevelMeter::resized()
 
 void LevelMeter::timerCallback()
 {
-    updateLevel(measurementL.getValue(), levelL, dbLevelL);
-    updateLevel(measurementR.getValue(), levelR, dbLevelR);
-    dbRmsLevelL = juce::Decibels::gainToDecibels(std::max(rmsMeasurementL.getValue(), clampLevel));
-    dbRmsLevelR = juce::Decibels::gainToDecibels(std::max(rmsMeasurementR.getValue(), clampLevel));
+    updateLevel(measurementL.readAndReset(), levelL, dbLevelL);
+    updateLevel(measurementR.readAndReset(), levelR, dbLevelR);
 
+    dbRmsLevelL = juce::Decibels::gainToDecibels(std::max(rmsMeasurementL.readAndReset(), clampLevel));
+    dbRmsLevelR = juce::Decibels::gainToDecibels(std::max(rmsMeasurementR.readAndReset(), clampLevel));
 
     repaint();
 }

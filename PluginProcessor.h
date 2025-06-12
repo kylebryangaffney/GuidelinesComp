@@ -114,15 +114,11 @@ private:
     void initializeProcessing(juce::AudioBuffer<float>& buffer);
 
     void updateBypassState();
-    void updateBypassFade();
     void updateLowCutFilter();
     void updateMappedCompressorParameters();
 
     void updateRMSLevels(const juce::AudioBuffer<float>& buffer, RmsMeasurement& rmsLevelLeft, RmsMeasurement& rmsLevelRight);
     void updatePeakLevels(const juce::AudioBuffer<float>& buffer, Measurement& peakLevelLeft, Measurement& peakLevelRight);
-    void resetMeterLevels();
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuideLinesCompAudioProcessor)
 };
-
-

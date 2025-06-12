@@ -20,7 +20,7 @@ class LevelMeter : public juce::Component,
     private juce::Timer
 {
 public:
-    LevelMeter(const Measurement& measurementL, const Measurement& measurementR, const RmsMeasurement& rmsMeasurementL, const RmsMeasurement& rmsMeasurementR);
+    LevelMeter(Measurement& measurementL, Measurement& measurementR, RmsMeasurement& rmsMeasurementL, RmsMeasurement& rmsMeasurementR);
     ~LevelMeter() override;
 
     void paint(juce::Graphics&) override;
@@ -28,10 +28,10 @@ public:
 
 private:
     //==============================================================================
-    const Measurement& measurementL;
-    const Measurement& measurementR;
-    const RmsMeasurement& rmsMeasurementL;
-    const RmsMeasurement& rmsMeasurementR;
+    Measurement& measurementL;
+    Measurement& measurementR;
+    RmsMeasurement& rmsMeasurementL;
+    RmsMeasurement& rmsMeasurementR;
 
     static constexpr float maxdB = 6.f;
     static constexpr float mindB = -60.f;
@@ -69,4 +69,3 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)
 };
-

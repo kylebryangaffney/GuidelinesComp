@@ -2,14 +2,13 @@
   ==============================================================================
 
     Measurement.h
-    Created: 7 Jun 2025 7:38:24am
+    Created: 8 Mar 2025 9:46:35am
     Author:  kyleb
 
   ==============================================================================
 */
 
 #pragma once
-
 
 #include <atomic>
 
@@ -31,13 +30,6 @@ struct Measurement
     {
         return value.exchange(0.f);
     }
-
-    float getValue() const noexcept
-    {
-        return value.load();
-    }
-
-private:
 
     std::atomic<float> value;
 };

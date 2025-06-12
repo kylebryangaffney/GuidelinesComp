@@ -35,6 +35,8 @@ struct RmsMeasurement
         int count = numSamples.exchange(0);
         float rms = (count > 0) ? std::sqrt(sum / count) : 0.0f;
         value.store(rms);
+        DBG("RMS: " << rms << " | Count: " << count);
+
         return rms;
     }
 
