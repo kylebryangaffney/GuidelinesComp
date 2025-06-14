@@ -26,7 +26,7 @@ public:
 private:
     juce::dsp::Compressor<float> compressor;
 
-    const double smootheningInSeconds = 0.0002; // reaction time
+    const double smootheningInSeconds = 0.0001; // reaction time
 
     juce::LinearSmoothedValue<float> attackSmoothed;
     juce::LinearSmoothedValue<float> releaseSmoothed;

@@ -294,13 +294,13 @@ void GuideLinesCompAudioProcessor::updateLowCutFilter()
 void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
 {
     //--- Raw parameter inputs ---
-    float controlValue = juce::jlimit(0.001f, 100.0f, params.control);
-    float compressValue = juce::jlimit(0.001f, 100.0f, params.compression);
+    float controlValue = juce::jlimit(1.0f, 100.0f, params.control);
+    float compressValue = juce::jlimit(1.0f, 100.0f, params.compression);
 
     //--- Normalized values ---
-    float normControl = controlValue / 100.0f;
     float normCompress = compressValue / 100.0f;
-    float attackNormControl = juce::jlimit(0.001f, 1.0f, 1.0f - normControl);
+    float normControl = controlValue / 100.0f;
+   
 
     //--- Input gain (from compression value) ---
     float inputGainDb = juce::jmap(normCompress, -4.5f, 12.0f);
@@ -308,10 +308,7 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
     compressInputGainSmoother.setTargetValue(inputGainLin);
 
     //--- Compressor envelope shaping (from control value) ---
-    //float shapedControl = std::pow(attackNormControl, 0.8f); // tweak exponent to taste
-    float mappedAttack = juce::mapFromLog10(normControl, 80.0f, 1.0f);
-    //float mappedAttack = juce::mapFromLog10(attackNormControl, 75.0f, 1.0f);
-    //float mappedAttack = juce::jmap(controlValue, 0.0f, 100.0f, 60.0f, 1.0f);
+    float mappedAttack = juce::mapToLog10(normControl, 60.0f, 1.0f);
     float mappedRelease = juce::jmap(controlValue, 0.0f, 100.0f, 55.0f, 100.0f);
     float mappedThreshold = juce::jmap(controlValue, 0.0f, 100.0f, -12.0f, -24.0f);
 
