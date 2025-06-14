@@ -31,5 +31,11 @@ struct Measurement
         return value.exchange(0.f);
     }
 
+    float getValue() const noexcept
+    {
+        return value.load();
+    }
+
+private:
     std::atomic<float> value;
 };

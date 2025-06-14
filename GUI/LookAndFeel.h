@@ -55,8 +55,8 @@ namespace Colors
         const juce::Colour tickLine{ 200, 200, 200 };      // Light gray ticks
         const juce::Colour tickLabel{ 230, 120, 50 };       // Orange labels
         const juce::Colour tooLoud{ 226, 74, 81 };        // Red for overload
-        const juce::Colour peakLevelOK{ 255, 255, 0 };  // Bright yellow
-        const juce::Colour rmsLevelOK{ 0, 122, 204 };   // Medium blue
+        const juce::Colour peakLevelOK{ 50, 200, 180 };  // Bright yellow
+        const juce::Colour rmsLevelOK{ 160, 70, 220 };   // Medium blue
     }
 
     namespace Slider

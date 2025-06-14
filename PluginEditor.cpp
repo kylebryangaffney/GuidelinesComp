@@ -25,8 +25,8 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     //controlGroup.setText("Controls");
     //controlGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     controlGroup.addAndMakeVisible(lowCutKnob);
-    controlGroup.addAndMakeVisible(controlKnob);
     controlGroup.addAndMakeVisible(compressionKnob);
+    controlGroup.addAndMakeVisible(controlKnob);
     addAndMakeVisible(controlGroup);
 
     // Output group
@@ -81,8 +81,8 @@ void GuideLinesCompAudioProcessorEditor::resized()
     int knobY = controlGroupArea.getY();
 
     lowCutKnob.setTopLeftPosition(knobX, knobY);
-    controlKnob.setTopLeftPosition(lowCutKnob.getRight() + padding, knobY);
-    compressionKnob.setTopLeftPosition(controlKnob.getRight() + padding, knobY);
+    compressionKnob.setTopLeftPosition(lowCutKnob.getRight() + padding, knobY);
+    controlKnob.setTopLeftPosition(compressionKnob.getRight() + padding, knobY);
 
     outputGroup.setBounds(controlGroup.getRight() + padding, y, outputWidth, bounds.getHeight() - y - padding);
     outputGainKnob.setTopLeftPosition(knobX, knobY);

@@ -26,7 +26,7 @@ LevelMeter::LevelMeter(Measurement& measurementL_, Measurement& measurementR_,
     setOpaque(true);
     startTimerHz(refreshRate);
 
-    decay = 1.f - std::exp(-1.f / (float(refreshRate) * 2.f));
+    decay = 1.f - std::exp(-1.f / (float(refreshRate) * 4.f));
 }
 
 
@@ -75,14 +75,18 @@ void LevelMeter::resized()
 
 void LevelMeter::timerCallback()
 {
+    // Peak: read peak for this interval, decay smoothly
     updateLevel(measurementL.readAndReset(), levelL, dbLevelL);
     updateLevel(measurementR.readAndReset(), levelR, dbLevelR);
 
-    dbRmsLevelL = juce::Decibels::gainToDecibels(std::max(rmsMeasurementL.readAndReset(), clampLevel));
-    dbRmsLevelR = juce::Decibels::gainToDecibels(std::max(rmsMeasurementR.readAndReset(), clampLevel));
+    // RMS: get average for this interval
+    dbRmsLevelL =juce::Decibels::gainToDecibels(std::max(rmsMeasurementL.getValue(), clampLevel));
+    dbRmsLevelR = juce::Decibels::gainToDecibels(std::max(rmsMeasurementR.getValue(), clampLevel));
 
     repaint();
 }
+
+
 
 void LevelMeter::drawPeakLevel(juce::Graphics& g, float level, int x, int width)
 {
@@ -128,6 +132,8 @@ void LevelMeter::updateLevel(float newLevel, float& smoothedLevel, float& leveld
     else
         smoothedLevel += (newLevel - smoothedLevel) * decay;
 
-    leveldB = juce::Decibels::gainToDecibels(std::max(smoothedLevel, clampLevel));
-
+    if (smoothedLevel > clampLevel)
+        leveldB = juce::Decibels::gainToDecibels(smoothedLevel);
+    else
+        leveldB = clampdB;
 }

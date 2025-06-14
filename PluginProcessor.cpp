@@ -145,7 +145,7 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     updateLowCutFilter();
     updateMappedCompressorParameters();
 
-    // Route input and output buses
+    // Route input/output
     juce::AudioBuffer<float> mainInput = getBusBuffer(buffer, true, 0);
     juce::AudioBuffer<float> mainOutput = getBusBuffer(buffer, false, 0);
 
@@ -153,68 +153,65 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     const int numOutputChannels = mainOutput.getNumChannels();
     const int numSamples = buffer.getNumSamples();
 
-    // Clear unused output channels
     for (int ch = numInputChannels; ch < numOutputChannels; ++ch)
         mainOutput.clear(ch, 0, numSamples);
 
-    // Copy input to output
     for (int ch = 0; ch < juce::jmin(numInputChannels, numOutputChannels); ++ch)
         mainOutput.copyFrom(ch, 0, mainInput, ch, 0, numSamples);
 
-    // Wrap for DSP
     juce::dsp::AudioBlock<float> block(mainOutput);
     juce::dsp::ProcessContextReplacing<float> ctx(block);
 
-    // Apply input gain (smoothed)
     mainOutput.applyGain(compressInputGainSmoother.getNextValue());
 
-    // Measure input levels BEFORE processing
+    // --- Measure & compute input RMS + peak BEFORE processing
     updateRMSLevels(mainOutput, rmsInputLevelLeft, rmsInputLevelRight);
     updatePeakLevels(mainOutput, peakInputLevelLeft, peakInputLevelRight);
+    rmsInputLevelLeft.computeRMS();
+    rmsInputLevelRight.computeRMS();
 
-    // Process signal chain
     lowCutFilter.process(ctx);
     compA.processCompression(ctx);
 
-    // Measure interstage levels AFTER compA
+    // --- Measure & compute interstage RMS
     updateRMSLevels(mainOutput, rmsInterstageLevelLeft, rmsInterstageLevelRight);
+    rmsInterstageLevelLeft.computeRMS();
+    rmsInterstageLevelRight.computeRMS();
 
     compB.processCompression(ctx);
 
-    // Apply final output gain
     outputGainProcessor.setGainLinear(params.outputGain);
     outputGainProcessor.process(ctx);
 
-    // Measure final output levels AFTER all processing
+    // --- Measure & compute output RMS + peak AFTER all processing
     updateRMSLevels(mainOutput, rmsOutputLevelLeft, rmsOutputLevelRight);
     updatePeakLevels(mainOutput, peakOutputLevelLeft, peakOutputLevelRight);
+    rmsOutputLevelLeft.computeRMS();
+    rmsOutputLevelRight.computeRMS();
 
-    // Read and reset RMS values (after accumulation is complete)
-    const float rmsInputL = rmsInputLevelLeft.readAndReset();
-    const float rmsInputR = rmsInputLevelRight.readAndReset();
+    // --- Compute gain reduction using the stored values
+    const float rmsInputL = juce::jmax(rmsInputLevelLeft.getValue(), 1e-6f);
+    const float rmsInputR = juce::jmax(rmsInputLevelRight.getValue(), 1e-6f);
+    const float rmsInterL = juce::jmax(rmsInterstageLevelLeft.getValue(), 1e-6f);
+    const float rmsInterR = juce::jmax(rmsInterstageLevelRight.getValue(), 1e-6f);
+    const float rmsOutputL = juce::jmax(rmsOutputLevelLeft.getValue(), 1e-6f);
+    const float rmsOutputR = juce::jmax(rmsOutputLevelRight.getValue(), 1e-6f);
 
-    const float rmsInterL = rmsInterstageLevelLeft.readAndReset();
-    const float rmsInterR = rmsInterstageLevelRight.readAndReset();
-
-    const float rmsOutputL = rmsOutputLevelLeft.readAndReset();
-    const float rmsOutputR = rmsOutputLevelRight.readAndReset();
-
-    // Compute gain reduction values
     compAGainReductionDbLeft.store(
-        juce::Decibels::gainToDecibels(juce::jmax(rmsInterL, 1e-6f)) -
-        juce::Decibels::gainToDecibels(juce::jmax(rmsInputL, 1e-6f)));
+        juce::Decibels::gainToDecibels(rmsInterL) -
+        juce::Decibels::gainToDecibels(rmsInputL));
 
     compAGainReductionDbRight.store(
-        juce::Decibels::gainToDecibels(juce::jmax(rmsInterR, 1e-6f)) -
-        juce::Decibels::gainToDecibels(juce::jmax(rmsInputR, 1e-6f)));
+        juce::Decibels::gainToDecibels(rmsInterR) -
+        juce::Decibels::gainToDecibels(rmsInputR));
 
     compBGainReductionDbLeft.store(
-        juce::Decibels::gainToDecibels(juce::jmax(rmsOutputL, 1e-6f)) -
-        juce::Decibels::gainToDecibels(juce::jmax(rmsInterL, 1e-6f)));
+        juce::Decibels::gainToDecibels(rmsOutputL) -
+        juce::Decibels::gainToDecibels(rmsInterL));
 
     compBGainReductionDbRight.store(
-        juce::Decibels::gainToDecibels(juce::jmax(rmsOutputR, 1e-6f)) -
-        juce::Decibels::gainToDecibels(juce::jmax(rmsInterR, 1e-6f)));
+        juce::Decibels::gainToDecibels(rmsOutputR) -
+        juce::Decibels::gainToDecibels(rmsInterR));
 
 #if JUCE_DEBUG
     protectYourEars(buffer);
@@ -306,12 +303,15 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
     float attackNormControl = juce::jlimit(0.001f, 1.0f, 1.0f - normControl);
 
     //--- Input gain (from compression value) ---
-    float inputGainDb = juce::jmap(normCompress, 0.0f, 12.0f);
+    float inputGainDb = juce::jmap(normCompress, -4.5f, 12.0f);
     float inputGainLin = juce::Decibels::decibelsToGain(inputGainDb);
     compressInputGainSmoother.setTargetValue(inputGainLin);
 
     //--- Compressor envelope shaping (from control value) ---
-    float mappedAttack = juce::mapFromLog10(attackNormControl, 75.0f, 1.0f);
+    //float shapedControl = std::pow(attackNormControl, 0.8f); // tweak exponent to taste
+    float mappedAttack = juce::mapFromLog10(normControl, 80.0f, 1.0f);
+    //float mappedAttack = juce::mapFromLog10(attackNormControl, 75.0f, 1.0f);
+    //float mappedAttack = juce::jmap(controlValue, 0.0f, 100.0f, 60.0f, 1.0f);
     float mappedRelease = juce::jmap(controlValue, 0.0f, 100.0f, 55.0f, 100.0f);
     float mappedThreshold = juce::jmap(controlValue, 0.0f, 100.0f, -12.0f, -24.0f);
 
@@ -340,7 +340,8 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
     DBG("Attack: " << mappedAttack
         << ", Release: " << mappedRelease
         << ", Threshold: " << mappedThreshold
-        << ", Ratio: " << mappedRatio);
+        << ", Ratio: " << mappedRatio
+        <<", input gain: " << inputGainDb);
 }
 
 void GuideLinesCompAudioProcessor::updateRMSLevels(const juce::AudioBuffer<float>& buffer,
@@ -365,7 +366,8 @@ void GuideLinesCompAudioProcessor::updateRMSLevels(const juce::AudioBuffer<float
 }
 
 
-void GuideLinesCompAudioProcessor::updatePeakLevels(const juce::AudioBuffer<float>& buffer,
+void GuideLinesCompAudioProcessor::updatePeakLevels(
+    const juce::AudioBuffer<float>& buffer,
     Measurement& peakLevelLeft,
     Measurement& peakLevelRight)
 {
@@ -375,13 +377,15 @@ void GuideLinesCompAudioProcessor::updatePeakLevels(const juce::AudioBuffer<floa
     for (int ch = 0; ch < numChannels; ++ch)
     {
         const float* data = buffer.getReadPointer(ch);
+
         for (int i = 0; i < numSamples; ++i)
         {
-            float sample = data[i];
+            const float absSample = std::fabs(data[i]);
+
             if (ch == 0)
-                peakLevelLeft.updateIfGreater(sample);
+                peakLevelLeft.updateIfGreater(absSample);
             else if (ch == 1)
-                peakLevelRight.updateIfGreater(sample);
+                peakLevelRight.updateIfGreater(absSample);
         }
     }
 }
