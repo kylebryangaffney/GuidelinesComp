@@ -80,6 +80,9 @@ public:
     Measurement peakOutputLevelRight;
     Measurement peakOutputLevelLeft;
 
+    RmsMeasurement rmsTotalGainReductionLeft;
+    RmsMeasurement rmsTotalGainReductionRight;
+
 private:
 
     juce::dsp::StateVariableTPTFilter<float> lowCutFilter;

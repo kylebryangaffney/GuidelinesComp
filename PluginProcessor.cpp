@@ -93,7 +93,6 @@ void GuideLinesCompAudioProcessor::prepareToPlay(double sampleRate, int samplesP
     params.prepareToPlay(sampleRate);
     params.reset();
 
-
     juce::dsp::ProcessSpec spec;
     spec.sampleRate = sampleRate;
     spec.maximumBlockSize = juce::uint32(samplesPerBlock);
@@ -145,6 +144,9 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     updateLowCutFilter();
     updateMappedCompressorParameters();
 
+    rmsTotalGainReductionLeft.reset();
+    rmsTotalGainReductionRight.reset();
+
     // Route input/output
     juce::AudioBuffer<float> mainInput = getBusBuffer(buffer, true, 0);
     juce::AudioBuffer<float> mainOutput = getBusBuffer(buffer, false, 0);
@@ -190,17 +192,21 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     rmsOutputLevelRight.computeRMS();
 
     // --- Compute gain reduction using the stored values
-    const float rmsInputL = juce::jmax(rmsInputLevelLeft.getValue(), 1e-6f);
-    const float rmsInputR = juce::jmax(rmsInputLevelRight.getValue(), 1e-6f);
-    const float rmsInterL = juce::jmax(rmsInterstageLevelLeft.getValue(), 1e-6f);
-    const float rmsInterR = juce::jmax(rmsInterstageLevelRight.getValue(), 1e-6f);
-    const float rmsOutputL = juce::jmax(rmsOutputLevelLeft.getValue(), 1e-6f);
-    const float rmsOutputR = juce::jmax(rmsOutputLevelRight.getValue(), 1e-6f);
+    const float rmsInputL = rmsInputLevelLeft.getValue();
+    const float rmsInputR = rmsInputLevelRight.getValue();
+    const float rmsInterL = rmsInterstageLevelLeft.getValue();
+    const float rmsInterR = rmsInterstageLevelRight.getValue();
+    const float rmsOutputL = rmsOutputLevelLeft.getValue();
+    const float rmsOutputR = rmsOutputLevelRight.getValue();
+    float totalGR_L = juce::Decibels::gainToDecibels(rmsOutputL) - juce::Decibels::gainToDecibels(rmsInputL);
+    float totalGR_R = juce::Decibels::gainToDecibels(rmsOutputR) - juce::Decibels::gainToDecibels(rmsInputR);
+
+    rmsTotalGainReductionLeft.updateDirect(totalGR_L);
+    rmsTotalGainReductionRight.updateDirect(totalGR_R);
 
     compAGainReductionDbLeft.store(
         juce::Decibels::gainToDecibels(rmsInterL) -
         juce::Decibels::gainToDecibels(rmsInputL));
-
     compAGainReductionDbRight.store(
         juce::Decibels::gainToDecibels(rmsInterR) -
         juce::Decibels::gainToDecibels(rmsInputR));
@@ -208,16 +214,24 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     compBGainReductionDbLeft.store(
         juce::Decibels::gainToDecibels(rmsOutputL) -
         juce::Decibels::gainToDecibels(rmsInterL));
-
     compBGainReductionDbRight.store(
         juce::Decibels::gainToDecibels(rmsOutputR) -
         juce::Decibels::gainToDecibels(rmsInterR));
+
+    rmsTotalGainReductionLeft.computeAverage();
+    rmsTotalGainReductionRight.computeAverage();
+
+    DBG("compAGRLeft: " << compAGainReductionDbLeft.load()
+        << "\ncompAGRRight: " << compAGainReductionDbRight.load()
+        << "\nCompBGRLeft: " << compBGainReductionDbLeft.load()
+        << "\nCompBGRight: " << compBGainReductionDbRight.load()
+        << "\nTotalGRLeft: " << rmsTotalGainReductionLeft.getValue()
+        << "\nTotalGRRight: " << rmsTotalGainReductionRight.getValue());
 
 #if JUCE_DEBUG
     protectYourEars(buffer);
 #endif
 }
-
 
 //==============================================================================
 bool GuideLinesCompAudioProcessor::hasEditor() const
@@ -300,10 +314,9 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
     //--- Normalized values ---
     float normCompress = compressValue / 100.0f;
     float normControl = controlValue / 100.0f;
-   
 
     //--- Input gain (from compression value) ---
-    float inputGainDb = juce::jmap(normCompress, -4.5f, 12.0f);
+    float inputGainDb = juce::jmap(normCompress, -3.0f, 12.0f);
     float inputGainLin = juce::Decibels::decibelsToGain(inputGainDb);
     compressInputGainSmoother.setTargetValue(inputGainLin);
 
@@ -335,10 +348,11 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
         controlThresholdASmoother.getNextValue());
 
     DBG("Attack: " << mappedAttack
-        << ", Release: " << mappedRelease
-        << ", Threshold: " << mappedThreshold
-        << ", Ratio: " << mappedRatio
-        <<", input gain: " << inputGainDb);
+        << "\nRelease: " << mappedRelease
+        << "\nThreshold: " << mappedThreshold
+        << "\nRatio: " << mappedRatio
+        << "\nInput gain: " << inputGainDb);
+
 }
 
 void GuideLinesCompAudioProcessor::updateRMSLevels(const juce::AudioBuffer<float>& buffer,
@@ -361,7 +375,6 @@ void GuideLinesCompAudioProcessor::updateRMSLevels(const juce::AudioBuffer<float
         }
     }
 }
-
 
 void GuideLinesCompAudioProcessor::updatePeakLevels(
     const juce::AudioBuffer<float>& buffer,

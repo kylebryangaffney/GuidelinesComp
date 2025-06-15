@@ -39,6 +39,7 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     meterGroup.setText("Meters");
     meterGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     meterGroup.addAndMakeVisible(inputMeter);
+    meterGroup, addAndMakeVisible(gRMeter);
     addAndMakeVisible(meterGroup);
 
 
@@ -89,5 +90,14 @@ void GuideLinesCompAudioProcessorEditor::resized()
     outputMeter.setBounds(knobX, outputGainKnob.getBottom() + 42, meterWidth, meterHeight);
 
     meterGroup.setBounds(padding, controlGroup.getBottom() + padding, controlAndMeterWidth, 225 - padding);
-    inputMeter.setBounds(knobWidth, controlGroup.getBottom() - meterHeight - 25, meterWidth, meterHeight);
+    inputMeter.setBounds(
+        knobWidth - (padding * 2),
+        controlGroup.getBottom() - meterHeight - 25, 
+        meterWidth, 
+        meterHeight);
+    gRMeter.setBounds(
+        inputMeter.getRight() + knobWidth,         // X: directly to right of inputMeter
+        meterGroup.getBottom() - meterHeight - 25,  // Y: same as inputMeter
+        meterWidth,
+        meterHeight);
 }

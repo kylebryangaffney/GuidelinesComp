@@ -14,6 +14,7 @@
 #include "GUI/RotaryKnob.h"
 #include "GUI/AsymmetricalRotaryKnob.h"
 #include "GUI/LevelMeter.h"
+#include "GUI/GainReductionMeter.h"
 
 //==============================================================================
 /**
@@ -45,6 +46,9 @@ private:
     LevelMeter outputMeter{
         audioProcessor.peakOutputLevelLeft, audioProcessor.peakOutputLevelRight,
         audioProcessor.rmsOutputLevelLeft, audioProcessor.rmsOutputLevelRight };
+
+    GainReductionMeter gRMeter{
+        audioProcessor.rmsTotalGainReductionLeft, audioProcessor.rmsTotalGainReductionRight };
 
     juce::GroupComponent controlGroup;
     juce::GroupComponent meterGroup;
