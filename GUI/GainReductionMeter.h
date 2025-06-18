@@ -1,3 +1,4 @@
+
 /*
   ==============================================================================
 
@@ -28,13 +29,14 @@ private:
     RmsMeasurement& rmsMeasurementL;
     RmsMeasurement& rmsMeasurementR;
 
-    static constexpr float maxdB = 6.f;
-    static constexpr float mindB = -60.f;
-    static constexpr float stepdB = 6.f;
-    static constexpr float clampdB = -120.f;
+    static constexpr float maxdB = 0.0f;   // top: no GR
+    static constexpr float mindB = 36.0f;  // bottom: max GR
+    static constexpr float stepdB = 6.0f;
+    static constexpr float clampdB = 0.0f;
     static constexpr float clampLevel = 0.000001f;
     static constexpr int refreshRate = 60;
-   
+    static constexpr float maxReduction = 36.0f;
+
     float decay = 0.f;
     float dbLevelL = 0.f;
     float dbLevelR = 0.f;
@@ -59,3 +61,4 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainReductionMeter)
 };
+

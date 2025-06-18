@@ -1,3 +1,5 @@
+
+
 /*
   ==============================================================================
 
@@ -21,10 +23,9 @@ GainReductionMeter::GainReductionMeter(RmsMeasurement& rmsMeasurementL_, RmsMeas
     setOpaque(true);
     startTimerHz(refreshRate);
 
-    decay = 1.f - std::exp(-1.f / (float(refreshRate) * 4.f));
+    decay = 1.f - std::exp(-1.f / (float(refreshRate) * 0.5f));
 
 }
-
 
 
 GainReductionMeter::~GainReductionMeter() = default;
@@ -33,22 +34,21 @@ GainReductionMeter::~GainReductionMeter() = default;
 void GainReductionMeter::paint(juce::Graphics& g)
 {
     const auto bounds = getLocalBounds();
-
     g.fillAll(Colors::LevelMeter::background);
     g.setFont(Fonts::getFont(10.f));
 
     drawRmsLevel(g, dbRmsLevelL, 0, 7);
     drawRmsLevel(g, dbRmsLevelR, 9, 7);
 
-    for (float db = maxdB; db >= mindB; db -= stepdB)
+    // Draw ticks top (0 dB) to bottom (mindB)
+    for (float db = maxdB; db <= mindB; db += stepdB)
     {
         int y = positionForLevel(db);
-
         g.setColour(Colors::LevelMeter::tickLine);
         g.fillRect(0, y, 16, 1);
 
         g.setColour(Colors::LevelMeter::tickLabel);
-        g.drawSingleLineText(juce::String(int(db)), bounds.getWidth(), y + 3, juce::Justification::right);
+        g.drawSingleLineText(juce::String(int(db)), bounds.getWidth() - 2, y + 3, juce::Justification::right);
     }
 }
 
@@ -77,25 +77,17 @@ void GainReductionMeter::timerCallback()
 
 void GainReductionMeter::drawRmsLevel(juce::Graphics& g, float levelDB, int x, int width)
 {
-    if (levelDB <= clampdB)
+    if (levelDB <= 0.f)
         return;
 
-    const int yStart = juce::jlimit(0, getHeight(), positionForLevel(levelDB));
-    const int yZero = juce::jlimit(0, getHeight(), positionForLevel(0.0f));
+    float db = juce::jlimit(0.0f, mindB, levelDB); // levelDB should be positive
 
-    if (yStart < yZero)
-    {
-        g.setColour(Colors::LevelMeter::tooLoud);
-        g.fillRect(x, yStart, width, yZero - yStart);
+    int yTop = positionForLevel(maxdB);   // usually 0
+    int yCurrent = positionForLevel(db);  // lower = more reduction (further down)
 
-        g.setColour(Colors::LevelMeter::rmsLevelOK);
-        g.fillRect(x, yZero, width, getHeight() - yZero);
-    }
-    else
-    {
-        g.setColour(Colors::LevelMeter::rmsLevelOK);
-        g.fillRect(x, yStart, width, getHeight() - yStart);
-    }
+    g.setColour(Colors::LevelMeter::rmsLevelOK);
+    g.fillRect(x, yTop, width, yCurrent - yTop);
+
 }
 
 

@@ -198,8 +198,9 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     const float rmsInterR = rmsInterstageLevelRight.getValue();
     const float rmsOutputL = rmsOutputLevelLeft.getValue();
     const float rmsOutputR = rmsOutputLevelRight.getValue();
-    float totalGR_L = juce::Decibels::gainToDecibels(rmsOutputL) - juce::Decibels::gainToDecibels(rmsInputL);
-    float totalGR_R = juce::Decibels::gainToDecibels(rmsOutputR) - juce::Decibels::gainToDecibels(rmsInputR);
+    
+    float totalGR_L = juce::Decibels::gainToDecibels(rmsInputL) - juce::Decibels::gainToDecibels(rmsOutputL);
+    float totalGR_R = juce::Decibels::gainToDecibels(rmsInputR) - juce::Decibels::gainToDecibels(rmsOutputR);
 
     rmsTotalGainReductionLeft.updateDirect(totalGR_L);
     rmsTotalGainReductionRight.updateDirect(totalGR_R);
