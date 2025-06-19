@@ -26,7 +26,7 @@ LevelMeter::LevelMeter(Measurement& measurementL_, Measurement& measurementR_,
     setOpaque(true);
     startTimerHz(refreshRate);
 
-    decay = 1.f - std::exp(-1.f / (float(refreshRate) * 4.f));
+    decay = 1.f - std::exp(-1.f / (float(refreshRate) * 1.f));
 }
 
 

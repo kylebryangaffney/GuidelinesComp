@@ -223,11 +223,11 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     rmsTotalGainReductionRight.computeAverage();
 
     DBG("compAGRLeft: " << compAGainReductionDbLeft.load()
-        << "\ncompAGRRight: " << compAGainReductionDbRight.load()
-        << "\nCompBGRLeft: " << compBGainReductionDbLeft.load()
-        << "\nCompBGRight: " << compBGainReductionDbRight.load()
-        << "\nTotalGRLeft: " << rmsTotalGainReductionLeft.getValue()
-        << "\nTotalGRRight: " << rmsTotalGainReductionRight.getValue());
+        << "  compAGRRight: " << compAGainReductionDbRight.load()
+        << "  CompBGRLeft: " << compBGainReductionDbLeft.load()
+        << "  CompBGRight: " << compBGainReductionDbRight.load()
+        << "  TotalGRLeft: " << rmsTotalGainReductionLeft.getValue()
+        << "  TotalGRRight: " << rmsTotalGainReductionRight.getValue());
 
 #if JUCE_DEBUG
     protectYourEars(buffer);
@@ -349,10 +349,10 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
         controlThresholdASmoother.getNextValue());
 
     DBG("Attack: " << mappedAttack
-        << "\nRelease: " << mappedRelease
-        << "\nThreshold: " << mappedThreshold
-        << "\nRatio: " << mappedRatio
-        << "\nInput gain: " << inputGainDb);
+        << "  Release: " << mappedRelease
+        << "  Threshold: " << mappedThreshold
+        << "  Ratio: " << mappedRatio
+        << "  Input gain: " << inputGainDb);
 
 }
 

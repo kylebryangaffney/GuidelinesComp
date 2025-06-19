@@ -23,7 +23,7 @@ GainReductionMeter::GainReductionMeter(RmsMeasurement& rmsMeasurementL_, RmsMeas
     setOpaque(true);
     startTimerHz(refreshRate);
 
-    decay = 1.f - std::exp(-1.f / (float(refreshRate) * 0.5f));
+    decay = 1.f - std::exp(-1.f / (float(refreshRate) * 0.4f));
 
 }
 
