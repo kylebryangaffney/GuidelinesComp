@@ -83,6 +83,9 @@ public:
     RmsMeasurement rmsTotalGainReductionLeft;
     RmsMeasurement rmsTotalGainReductionRight;
 
+    float getPeakInputLevelForKnob() const noexcept { return peakInputLevelForKnob.load(); }
+    float getCompressionAmountForKnob() const noexcept { return compressionAmountForKnob.load(); }
+
 private:
 
     juce::dsp::StateVariableTPTFilter<float> lowCutFilter;
@@ -113,6 +116,9 @@ private:
     juce::LinearSmoothedValue<float> controlThresholdASmoother = -12.f;
     juce::LinearSmoothedValue<float> compressRatioASmoother = 2.0f;
     juce::LinearSmoothedValue<float> controlReleaseASmoother = 55.0f;
+
+    std::atomic<float> peakInputLevelForKnob{ 0.0f };
+    std::atomic<float> compressionAmountForKnob{ 0.0f };
 
     void initializeProcessing(juce::AudioBuffer<float>& buffer);
 

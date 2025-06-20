@@ -47,3 +47,13 @@ void RotaryKnob::resized()
 {
     slider.setTopLeftPosition(0, 24);
 }
+
+void RotaryKnob::setAlertLevel(float newAlert)
+{
+    alertLevel = newAlert;
+}
+
+float RotaryKnob::getAlertLevel() const
+{
+    return alertLevel;
+}

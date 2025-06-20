@@ -28,8 +28,13 @@ public:
     juce::Slider slider;
     juce::Label label;
 
+    void setAlertLevel(float newAlert);
+    float getAlertLevel() const;
+
 private:
     juce::AudioProcessorValueTreeState::SliderAttachment attachment;
+
+    float alertLevel = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RotaryKnob)
 };

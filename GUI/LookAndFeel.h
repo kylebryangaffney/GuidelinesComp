@@ -11,6 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "RotaryKnob.h"
 
 //==============================================================================
 // Color Scheme
@@ -63,6 +64,7 @@ namespace Colors
     {
         const juce::Colour sliderFill{ 160, 70, 220 };   // Purple accent
         const juce::Colour standoutFill{ 50, 200, 180 };   // Cyan highlight
+        const juce::Colour sliderClippingFill{ 226, 74, 81 }; // Red for overload
     }
 }
 

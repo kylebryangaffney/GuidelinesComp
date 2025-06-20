@@ -166,6 +166,8 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
     mainOutput.applyGain(compressInputGainSmoother.getNextValue());
 
+    peakInputLevelForKnob.store(juce::jmax(peakInputLevelLeft.getValue(), peakInputLevelRight.getValue()));
+
     // --- Measure & compute input RMS + peak BEFORE processing
     updateRMSLevels(mainOutput, rmsInputLevelLeft, rmsInputLevelRight);
     updatePeakLevels(mainOutput, peakInputLevelLeft, peakInputLevelRight);
@@ -218,6 +220,11 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     compBGainReductionDbRight.store(
         juce::Decibels::gainToDecibels(rmsOutputR) -
         juce::Decibels::gainToDecibels(rmsInterR));
+
+    float compAMax = juce::jmax(compAGainReductionDbLeft.load(), compAGainReductionDbRight.load());
+    float compBMax = juce::jmax(compBGainReductionDbLeft.load(), compBGainReductionDbRight.load());
+
+    compressionAmountForKnob.store(juce::jmax(compAMax, compBMax));
 
     rmsTotalGainReductionLeft.computeAverage();
     rmsTotalGainReductionRight.computeAverage();

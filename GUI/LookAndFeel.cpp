@@ -33,6 +33,7 @@ RotaryKnobLookAndFeel::RotaryKnobLookAndFeel()
     setColour(juce::CaretComponent::caretColourId, Colors::Knob::caret);
 }
 
+
 void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width,
     [[maybe_unused]] int height, float sliderPos,
     float rotaryStartAngle, float rotaryEndAngle,
@@ -40,6 +41,9 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
 {
     auto bounds = juce::Rectangle<float>(x, y, width, width);
     auto knobRect = bounds.reduced(10.f);
+
+    auto* knob = dynamic_cast<RotaryKnob*>(slider.getParentComponent());
+    float alertLevel = knob ? knob->getAlertLevel() : 0.0f;
 
     juce::Path knobShape;
     knobShape.addEllipse(knobRect);
@@ -91,7 +95,9 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
         valueArc.addCentredArc(center.x, center.y, arcRadius, arcRadius, 0.f,
             fromAngle, toAngle, true);
 
-        g.setColour(slider.findColour(juce::Slider::rotarySliderFillColourId));
+        juce::Colour finalFillColor = Colors::Slider::sliderFill.interpolatedWith(Colors::Slider::sliderClippingFill, alertLevel);
+
+        g.setColour(finalFillColor);
         g.strokePath(valueArc, stroke);
     }
 }
