@@ -6,12 +6,6 @@
   ==============================================================================
 */
 
-
-/// add more space between knobs, groups, and meters. posibly make it all taller as well
-/// 330, 450 is a good ratio, but needs to be bigger
-
-
-
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
@@ -21,12 +15,20 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
 {
     setLookAndFeel(&mainLF);
 
+    addAndMakeVisible(lowCutKnob);
+
+    // Compress group
+    //compressGroup.setText("Compress");
+    //compressGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    compressGroup.addAndMakeVisible(compressionKnob);
+    compressGroup.addAndMakeVisible(inputMeter);
+    addAndMakeVisible(compressGroup);
+
     // Control group
-    //controlGroup.setText("Controls");
+    //controlGroup.setText("Control");
     //controlGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
-    controlGroup.addAndMakeVisible(lowCutKnob);
-    controlGroup.addAndMakeVisible(compressionKnob);
     controlGroup.addAndMakeVisible(controlKnob);
+    controlGroup.addAndMakeVisible(gRMeter);
     addAndMakeVisible(controlGroup);
 
     // Output group
@@ -36,14 +38,8 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     outputGroup.addAndMakeVisible(outputMeter);
     addAndMakeVisible(outputGroup);
 
-    meterGroup.setText("Meters");
-    meterGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
-    meterGroup.addAndMakeVisible(inputMeter);
-    meterGroup, addAndMakeVisible(gRMeter);
-    addAndMakeVisible(meterGroup);
-
-
-    setSize(330, 450);
+    setSize(400, 430);
+    startTimerHz(60);
 }
 
 GuideLinesCompAudioProcessorEditor::~GuideLinesCompAudioProcessorEditor()
@@ -67,37 +63,41 @@ void GuideLinesCompAudioProcessorEditor::resized()
 
     int headerHeight = 50;
     int presetPanelHeight = 40;
-    int padding = 10;
+    int padding = 15;
     int y = headerHeight + presetPanelHeight + padding;
-    const int controlAndMeterWidth = 220;
-    const int outputWidth = 80;
-    constexpr int knobWidth = 60;
-    constexpr int knobHeight = 100;
-    const int meterWidth = 45;
-    const int meterHeight = 160;
 
-    controlGroup.setBounds(padding, y, controlAndMeterWidth, 225 - y - padding);
-    auto controlGroupArea = controlGroup.getLocalBounds().reduced(padding);
-    int knobX = controlGroupArea.getX();
-    int knobY = controlGroupArea.getY();
+    int groupWidth = 83;
+    int groupHeight = bounds.getHeight() - y - padding;
+    int groupSpacing = padding;
 
-    lowCutKnob.setTopLeftPosition(knobX, knobY);
-    compressionKnob.setTopLeftPosition(lowCutKnob.getRight() + padding, knobY);
-    controlKnob.setTopLeftPosition(compressionKnob.getRight() + padding, knobY);
+    lowCutKnob.setTopLeftPosition(padding, y + padding);
 
-    outputGroup.setBounds(controlGroup.getRight() + padding, y, outputWidth, bounds.getHeight() - y - padding);
-    outputGainKnob.setTopLeftPosition(knobX, knobY);
-    outputMeter.setBounds(knobX, outputGainKnob.getBottom() + 42, meterWidth, meterHeight);
+    compressGroup.setBounds(lowCutKnob.getRight() + groupSpacing, y, groupWidth, groupHeight);
+    controlGroup.setBounds(compressGroup.getRight() + groupSpacing, y, groupWidth, groupHeight);
+    outputGroup.setBounds(controlGroup.getRight() + groupSpacing, y, groupWidth, groupHeight);
 
-    meterGroup.setBounds(padding, controlGroup.getBottom() + padding, controlAndMeterWidth, 225 - padding);
-    inputMeter.setBounds(
-        knobWidth - (padding * 2),
-        controlGroup.getBottom() - meterHeight - 25, 
-        meterWidth, 
-        meterHeight);
-    gRMeter.setBounds(
-        inputMeter.getRight() + knobWidth,         // X: directly to right of inputMeter
-        meterGroup.getBottom() - meterHeight - 25,  // Y: same as inputMeter
-        meterWidth,
-        meterHeight);
+    auto compressArea = compressGroup.getLocalBounds().reduced(padding);
+    compressionKnob.setTopLeftPosition(compressArea.getX(), compressArea.getY());
+    inputMeter.setBounds(compressArea.getX(), compressionKnob.getBottom() + padding, groupWidth - 2 * padding, 160);
+
+    auto controlArea = controlGroup.getLocalBounds().reduced(padding);
+    controlKnob.setTopLeftPosition(controlArea.getX(), controlArea.getY());
+    gRMeter.setBounds(controlArea.getX(), controlKnob.getBottom() + padding, groupWidth - 2 * padding, 160);
+
+    auto outputArea = outputGroup.getLocalBounds().reduced(padding);
+    outputGainKnob.setTopLeftPosition(outputArea.getX(), outputArea.getY());
+    outputMeter.setBounds(outputArea.getX(), outputGainKnob.getBottom() + padding, groupWidth - 2 * padding, 160);
+}
+
+
+void GuideLinesCompAudioProcessorEditor::timerCallback()
+{
+
+    auto input = audioProcessor.getPeakInputLevelForKnob();
+    auto compress = audioProcessor.getCompressionAmountForKnob();
+    auto output = audioProcessor.getPeakOutputLevelForKnob();
+    compressionKnob.setAlertLevel(juce::jlimit(0.f, 1.f, input));
+    controlKnob.setAlertLevel(juce::jlimit(0.f, 1.f, compress));
+    outputGainKnob.setAlertLevel(juce::jlimit(0.f, 1.f, output));
+
 }

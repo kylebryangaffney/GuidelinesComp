@@ -225,6 +225,7 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     float compBMax = juce::jmax(compBGainReductionDbLeft.load(), compBGainReductionDbRight.load());
 
     compressionAmountForKnob.store(juce::jmax(compAMax, compBMax));
+    peakOutputLevelForKnob.store(juce::jmax(peakOutputLevelLeft.getValue(), peakOutputLevelRight.getValue()));
 
     rmsTotalGainReductionLeft.computeAverage();
     rmsTotalGainReductionRight.computeAverage();

@@ -85,6 +85,7 @@ public:
 
     float getPeakInputLevelForKnob() const noexcept { return peakInputLevelForKnob.load(); }
     float getCompressionAmountForKnob() const noexcept { return compressionAmountForKnob.load(); }
+    float getPeakOutputLevelForKnob() const noexcept { return peakInputLevelForKnob.load(); }
 
 private:
 
@@ -119,6 +120,7 @@ private:
 
     std::atomic<float> peakInputLevelForKnob{ 0.0f };
     std::atomic<float> compressionAmountForKnob{ 0.0f };
+    std::atomic<float> peakOutputLevelForKnob{ 0.0f };
 
     void initializeProcessing(juce::AudioBuffer<float>& buffer);
 

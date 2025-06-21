@@ -19,7 +19,7 @@
 //==============================================================================
 /**
 */
-class GuideLinesCompAudioProcessorEditor : public juce::AudioProcessorEditor
+class GuideLinesCompAudioProcessorEditor : public juce::AudioProcessorEditor, private juce::Timer
 {
 public:
     GuideLinesCompAudioProcessorEditor(GuideLinesCompAudioProcessor&);
@@ -28,6 +28,7 @@ public:
     //==============================================================================
     void paint(juce::Graphics&) override;
     void resized() override;
+    void timerCallback() override;
 
 private:
 
@@ -35,8 +36,8 @@ private:
 
     GuideLinesCompAudioProcessor& audioProcessor;
     RotaryKnob lowCutKnob{ "Low Cut", audioProcessor.apvts, lowCutParamID };
-    RotaryKnob controlKnob{ "Control", audioProcessor.apvts, controlParamID };
     RotaryKnob compressionKnob{ "Compress", audioProcessor.apvts, compressionParamID };
+    RotaryKnob controlKnob{ "Control", audioProcessor.apvts, controlParamID };
     AsymmetricalRotaryKnob outputGainKnob{ "Output", audioProcessor.apvts, outputGainParamID };
 
     LevelMeter inputMeter{
@@ -50,10 +51,9 @@ private:
     GainReductionMeter gRMeter{
         audioProcessor.rmsTotalGainReductionLeft, audioProcessor.rmsTotalGainReductionRight };
 
+    juce::GroupComponent compressGroup;
     juce::GroupComponent controlGroup;
-    juce::GroupComponent meterGroup;
     juce::GroupComponent outputGroup;
-
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuideLinesCompAudioProcessorEditor)
 };
