@@ -156,6 +156,91 @@ juce::Label* RotaryKnobLookAndFeel::createSliderTextBox(juce::Slider& slider)
     label->setColour(juce::TextEditor::backgroundColourId, Colors::Knob::textBoxBackground);
     return label;
 }
+//======================================
+// LevelMeterLookAndFeel
+
+
+void LevelMeterLookAndFeel::drawLevelMeter(juce::Graphics& g, const LevelMeter& meter)
+{
+    const auto bounds = meter.getLocalBounds();
+    g.fillAll(Colors::LevelMeter::background);
+    g.setFont(Fonts::getFont(10.f));
+
+    // Draw LEFT peak
+    drawPeakLevel(g, meter.getPeakLevelL(), 0, 7,
+        [&](float db) { return meter.positionForLevel(db); },
+        meter.getHeight());
+
+    // RIGHT peak
+    drawPeakLevel(g, meter.getPeakLevelR(), 9, 7,
+        [&](float db) { return meter.positionForLevel(db); },
+        meter.getHeight());
+
+    // LEFT RMS
+    drawRmsLevel(g, meter.getRmsLevelL(), 1, 4,
+        [&](float db) { return meter.positionForLevel(db); },
+        meter.getHeight());
+
+    // RIGHT RMS
+    drawRmsLevel(g, meter.getRmsLevelR(), 10, 4,
+        [&](float db) { return meter.positionForLevel(db); },
+        meter.getHeight());
+
+    // Ticks and labels
+    for (float db = meter.maxdB; db >= meter.mindB; db -= meter.stepdB)
+    {
+        int y = meter.positionForLevel(db);
+        g.setColour(Colors::LevelMeter::tickLine);
+        g.fillRect(0, y, 16, 1);
+
+        g.setColour(Colors::LevelMeter::tickLabel);
+        g.drawSingleLineText(juce::String(int(db)),
+            bounds.getWidth(),
+            y + 3,
+            juce::Justification::right);
+    }
+}
+
+void LevelMeterLookAndFeel::drawMeterBar(juce::Graphics& g, float levelDB, int x, int width,
+    juce::Colour fillColour,
+    std::function<int(float)> positionForLevel,
+    int height)
+{
+    if (levelDB <= clampdB)
+        return;
+
+    const int yStart = juce::jlimit(0, height, positionForLevel(levelDB));
+    const int yZero = juce::jlimit(0, height, positionForLevel(0.0f));
+
+    if (yStart < yZero)
+    {
+        g.setColour(Colors::LevelMeter::tooLoud);
+        g.fillRect(x, yStart, width, yZero - yStart);
+
+        g.setColour(fillColour);
+        g.fillRect(x, yZero, width, height - yZero);
+    }
+    else
+    {
+        g.setColour(fillColour);
+        g.fillRect(x, yStart, width, height - yStart);
+    }
+}
+
+void LevelMeterLookAndFeel::drawPeakLevel(juce::Graphics& g, float level, int x, int width,
+    std::function<int(float)> positionForLevel, int height)
+{
+    drawMeterBar(g, level, x, width, Colors::LevelMeter::peakLevelOK,
+        positionForLevel, height);
+}
+
+void LevelMeterLookAndFeel::drawRmsLevel(juce::Graphics& g, float level, int x, int width,
+    std::function<int(float)> positionForLevel, int height)
+{
+    drawMeterBar(g, level, x, width, Colors::LevelMeter::rmsLevelOK,
+        positionForLevel, height);
+}
+
 
 //==============================================================================
 // MainLookAndFeel

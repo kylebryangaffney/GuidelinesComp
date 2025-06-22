@@ -98,6 +98,9 @@ void GuideLinesCompAudioProcessor::prepareToPlay(double sampleRate, int samplesP
     spec.maximumBlockSize = juce::uint32(samplesPerBlock);
     spec.numChannels = 2;
 
+    peakOutputLevelLeft.prepare(sampleRate, 0.05);
+    peakOutputLevelRight.prepare(sampleRate, 0.05);
+
     lowCutFilter.prepare(spec);
     lowCutFilter.reset();
     compA.prepare(spec);
@@ -146,6 +149,8 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
     rmsTotalGainReductionLeft.reset();
     rmsTotalGainReductionRight.reset();
+    peakOutputLevelLeft.reset();
+    peakOutputLevelRight.reset();
 
     // Route input/output
     juce::AudioBuffer<float> mainInput = getBusBuffer(buffer, true, 0);
@@ -166,7 +171,7 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
     mainOutput.applyGain(compressInputGainSmoother.getNextValue());
 
-    peakInputLevelForKnob.store(juce::jmax(peakInputLevelLeft.getValue(), peakInputLevelRight.getValue()));
+    peakInputLevelForKnob.store(juce::jmax(peakInputLevelLeft.getPeak(), peakInputLevelRight.getPeak()));
 
     // --- Measure & compute input RMS + peak BEFORE processing
     updateRMSLevels(mainOutput, rmsInputLevelLeft, rmsInputLevelRight);
@@ -178,11 +183,14 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     compA.processCompression(ctx);
 
     // --- Measure & compute interstage RMS
-    updateRMSLevels(mainOutput, rmsInterstageLevelLeft, rmsInterstageLevelRight);
-    rmsInterstageLevelLeft.computeRMS();
-    rmsInterstageLevelRight.computeRMS();
+    updateRMSLevels(mainOutput, rmsCompAOutputLeft, rmsCompAOutputRight);
+    rmsCompAOutputLeft.computeRMS();
+    rmsCompAOutputRight.computeRMS();
 
     compB.processCompression(ctx);
+    updateRMSLevels(mainOutput, rmsCompBOutputLeft, rmsCompBOutputRight);
+    rmsCompBOutputLeft.computeRMS();
+    rmsCompBOutputRight.computeRMS();
 
     outputGainProcessor.setGainLinear(params.outputGain);
     outputGainProcessor.process(ctx);
@@ -196,46 +204,35 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     // --- Compute gain reduction using the stored values
     const float rmsInputL = rmsInputLevelLeft.getValue();
     const float rmsInputR = rmsInputLevelRight.getValue();
-    const float rmsInterL = rmsInterstageLevelLeft.getValue();
-    const float rmsInterR = rmsInterstageLevelRight.getValue();
-    const float rmsOutputL = rmsOutputLevelLeft.getValue();
-    const float rmsOutputR = rmsOutputLevelRight.getValue();
-    
-    float totalGR_L = juce::Decibels::gainToDecibels(rmsInputL) - juce::Decibels::gainToDecibels(rmsOutputL);
-    float totalGR_R = juce::Decibels::gainToDecibels(rmsInputR) - juce::Decibels::gainToDecibels(rmsOutputR);
+    const float rmsCompAOutL = rmsCompAOutputLeft.getValue();
+    const float rmsCompAOutR = rmsCompAOutputRight.getValue();
+    const float rmsCompBOutL = rmsCompBOutputLeft.getValue();
+    const float rmsCompBOutR = rmsCompBOutputRight.getValue();
+
+    float totalGR_L = juce::Decibels::gainToDecibels(rmsInputL) - juce::Decibels::gainToDecibels(rmsCompBOutL);
+    float totalGR_R = juce::Decibels::gainToDecibels(rmsInputR) - juce::Decibels::gainToDecibels(rmsCompBOutR);
 
     rmsTotalGainReductionLeft.updateDirect(totalGR_L);
     rmsTotalGainReductionRight.updateDirect(totalGR_R);
 
     compAGainReductionDbLeft.store(
-        juce::Decibels::gainToDecibels(rmsInterL) -
-        juce::Decibels::gainToDecibels(rmsInputL));
+        juce::Decibels::gainToDecibels(rmsInputL) - juce::Decibels::gainToDecibels(rmsCompAOutL));
     compAGainReductionDbRight.store(
-        juce::Decibels::gainToDecibels(rmsInterR) -
-        juce::Decibels::gainToDecibels(rmsInputR));
+        juce::Decibels::gainToDecibels(rmsInputR) - juce::Decibels::gainToDecibels(rmsCompAOutR));
 
     compBGainReductionDbLeft.store(
-        juce::Decibels::gainToDecibels(rmsOutputL) -
-        juce::Decibels::gainToDecibels(rmsInterL));
+        juce::Decibels::gainToDecibels(rmsCompAOutL) - juce::Decibels::gainToDecibels(rmsCompBOutL));
     compBGainReductionDbRight.store(
-        juce::Decibels::gainToDecibels(rmsOutputR) -
-        juce::Decibels::gainToDecibels(rmsInterR));
+        juce::Decibels::gainToDecibels(rmsCompAOutR) - juce::Decibels::gainToDecibels(rmsCompBOutR));
 
     float compAMax = juce::jmax(compAGainReductionDbLeft.load(), compAGainReductionDbRight.load());
     float compBMax = juce::jmax(compBGainReductionDbLeft.load(), compBGainReductionDbRight.load());
 
     compressionAmountForKnob.store(juce::jmax(compAMax, compBMax));
-    peakOutputLevelForKnob.store(juce::jmax(peakOutputLevelLeft.getValue(), peakOutputLevelRight.getValue()));
+    peakOutputLevelForKnob.store(juce::jmax(peakOutputLevelLeft.getPeak(), peakOutputLevelRight.getPeak()));
 
     rmsTotalGainReductionLeft.computeAverage();
     rmsTotalGainReductionRight.computeAverage();
-
-    DBG("compAGRLeft: " << compAGainReductionDbLeft.load()
-        << "  compAGRRight: " << compAGainReductionDbRight.load()
-        << "  CompBGRLeft: " << compBGainReductionDbLeft.load()
-        << "  CompBGRight: " << compBGainReductionDbRight.load()
-        << "  TotalGRLeft: " << rmsTotalGainReductionLeft.getValue()
-        << "  TotalGRRight: " << rmsTotalGainReductionRight.getValue());
 
 #if JUCE_DEBUG
     protectYourEars(buffer);
@@ -356,11 +353,11 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
         compressRatioASmoother.getNextValue(),
         controlThresholdASmoother.getNextValue());
 
-    DBG("Attack: " << mappedAttack
-        << "  Release: " << mappedRelease
-        << "  Threshold: " << mappedThreshold
-        << "  Ratio: " << mappedRatio
-        << "  Input gain: " << inputGainDb);
+    //DBG("Attack: " << mappedAttack
+    //    << "  Release: " << mappedRelease
+    //    << "  Threshold: " << mappedThreshold
+    //    << "  Ratio: " << mappedRatio
+    //    << "  Input gain: " << inputGainDb);
 
 }
 
@@ -407,4 +404,7 @@ void GuideLinesCompAudioProcessor::updatePeakLevels(
                 peakLevelRight.updateIfGreater(absSample);
         }
     }
+
+    peakLevelLeft.updateSmoothed();
+    peakLevelRight.updateSmoothed();
 }

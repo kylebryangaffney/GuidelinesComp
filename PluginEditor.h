@@ -36,9 +36,9 @@ private:
 
     GuideLinesCompAudioProcessor& audioProcessor;
     RotaryKnob lowCutKnob{ "Low Cut", audioProcessor.apvts, lowCutParamID };
-    RotaryKnob compressionKnob{ "Compress", audioProcessor.apvts, compressionParamID };
-    RotaryKnob controlKnob{ "Control", audioProcessor.apvts, controlParamID };
-    AsymmetricalRotaryKnob outputGainKnob{ "Output", audioProcessor.apvts, outputGainParamID };
+    RotaryKnob compressionKnob{ "", audioProcessor.apvts, compressionParamID };
+    RotaryKnob controlKnob{ "", audioProcessor.apvts, controlParamID };
+    AsymmetricalRotaryKnob outputGainKnob{ "", audioProcessor.apvts, outputGainParamID };
 
     LevelMeter inputMeter{
         audioProcessor.peakInputLevelLeft, audioProcessor.peakInputLevelRight,

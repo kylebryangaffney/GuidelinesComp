@@ -23,22 +23,33 @@ public:
     LevelMeter(Measurement& measurementL, Measurement& measurementR, RmsMeasurement& rmsMeasurementL, RmsMeasurement& rmsMeasurementR);
     ~LevelMeter() override;
 
+    static constexpr float maxdB = 6.0f;
+    static constexpr float mindB = -60.f;
+    static constexpr float stepdB = 6.0f;
+
     void paint(juce::Graphics&) override;
     void resized() override;
 
+    float getPeakLevelL() const { return dbLevelL; }
+    float getPeakLevelR() const { return dbLevelR; }
+    float getRmsLevelL() const { return dbRmsLevelL; }
+    float getRmsLevelR() const { return dbRmsLevelR; }
+
+    int positionForLevel(float dbLevel) const noexcept
+    {
+        return int(std::round(juce::jmap(dbLevel, maxdB, mindB, maxPos, minPos)));
+    }
+
 private:
     //==============================================================================
+
     Measurement& measurementL;
     Measurement& measurementR;
     RmsMeasurement& rmsMeasurementL;
     RmsMeasurement& rmsMeasurementR;
 
-    static constexpr float maxdB = 6.f;
-    static constexpr float mindB = -60.f;
-    static constexpr float stepdB = 6.f;
     static constexpr float clampdB = -120.f;
     static constexpr float clampLevel = 0.000001f;
-
     static constexpr int refreshRate = 60;
 
     float decay = 0.f;
@@ -56,15 +67,6 @@ private:
 
     //==============================================================================
     void timerCallback() override;
-
-    int positionForLevel(float dbLevel) const noexcept
-    {
-        return int(std::round(juce::jmap(dbLevel, maxdB, mindB, maxPos, minPos)));
-    }
-
-    void drawMeterBar(juce::Graphics& g, float levelDB, int x, int width, juce::Colour fillColour);
-    void drawPeakLevel(juce::Graphics& g, float level, int x, int width);
-    void drawRmsLevel(juce::Graphics& g, float level, int x, int width);
     void updateLevel(float newLevel, float& smoothedLevel, float& leveldB) const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)

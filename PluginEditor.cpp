@@ -18,22 +18,22 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     addAndMakeVisible(lowCutKnob);
 
     // Compress group
-    //compressGroup.setText("Compress");
-    //compressGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    compressGroup.setText("Compress");
+    compressGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     compressGroup.addAndMakeVisible(compressionKnob);
     compressGroup.addAndMakeVisible(inputMeter);
     addAndMakeVisible(compressGroup);
 
     // Control group
-    //controlGroup.setText("Control");
-    //controlGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    controlGroup.setText("Control");
+    controlGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     controlGroup.addAndMakeVisible(controlKnob);
     controlGroup.addAndMakeVisible(gRMeter);
     addAndMakeVisible(controlGroup);
 
     // Output group
-    //outputGroup.setText("Output");
-    //outputGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    outputGroup.setText("Output");
+    outputGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     outputGroup.addAndMakeVisible(outputGainKnob);
     outputGroup.addAndMakeVisible(outputMeter);
     addAndMakeVisible(outputGroup);
@@ -92,12 +92,11 @@ void GuideLinesCompAudioProcessorEditor::resized()
 
 void GuideLinesCompAudioProcessorEditor::timerCallback()
 {
-
     auto input = audioProcessor.getPeakInputLevelForKnob();
     auto compress = audioProcessor.getCompressionAmountForKnob();
     auto output = audioProcessor.getPeakOutputLevelForKnob();
-    compressionKnob.setAlertLevel(juce::jlimit(0.f, 1.f, input));
-    controlKnob.setAlertLevel(juce::jlimit(0.f, 1.f, compress));
-    outputGainKnob.setAlertLevel(juce::jlimit(0.f, 1.f, output));
 
+    compressionKnob.setAlertLevel(juce::jlimit(0.f, 1.f, input));
+    controlKnob.setAlertLevel(juce::jlimit(0.f, 1.f, compress / 12));
+    outputGainKnob.setAlertLevel(juce::jlimit(0.f, 1.f, output));
 }

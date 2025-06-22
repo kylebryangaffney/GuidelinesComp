@@ -85,7 +85,7 @@ public:
 
     float getPeakInputLevelForKnob() const noexcept { return peakInputLevelForKnob.load(); }
     float getCompressionAmountForKnob() const noexcept { return compressionAmountForKnob.load(); }
-    float getPeakOutputLevelForKnob() const noexcept { return peakInputLevelForKnob.load(); }
+    float getPeakOutputLevelForKnob() const noexcept { return peakOutputLevelForKnob.load(); }
 
 private:
 
@@ -106,8 +106,10 @@ private:
     std::atomic<float> compAGainReductionDbLeft{ 0.0f };
     std::atomic<float> compAGainReductionDbRight{ 0.0f };
 
-    RmsMeasurement rmsInterstageLevelLeft;
-    RmsMeasurement rmsInterstageLevelRight;
+    RmsMeasurement rmsCompAOutputLeft;
+    RmsMeasurement rmsCompAOutputRight;
+    RmsMeasurement rmsCompBOutputLeft;
+    RmsMeasurement rmsCompBOutputRight;
 
     std::atomic<float> compBGainReductionDbLeft{ 0.0f };
     std::atomic<float> compBGainReductionDbRight{ 0.0f };

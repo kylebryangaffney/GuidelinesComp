@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "RotaryKnob.h"
+#include "LevelMeter.h"
 
 //==============================================================================
 // Color Scheme
@@ -110,6 +111,39 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RotaryKnobLookAndFeel)
 };
+
+
+//==============================================================================
+// Level Meter Look and Feel
+
+class LevelMeterLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    LevelMeterLookAndFeel() = default;
+
+    static LevelMeterLookAndFeel* get()
+    {
+        static LevelMeterLookAndFeel instance;
+        return &instance;
+    }
+
+    void drawLevelMeter(juce::Graphics& g, const LevelMeter& meter);
+    void drawMeterBar(juce::Graphics& g, float levelDB, int x, int width,
+        juce::Colour fillColour,
+        std::function<int(float)> positionForLevel, int height);
+
+    void drawPeakLevel(juce::Graphics& g, float level, int x, int width,
+        std::function<int(float)> positionForLevel, int height);
+
+    void drawRmsLevel(juce::Graphics& g, float level, int x, int width,
+        std::function<int(float)> positionForLevel, int height);
+
+private:
+    const float clampdB = -120.0f;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeterLookAndFeel)
+};
+
 
 //==============================================================================
 // Main Look and Feel

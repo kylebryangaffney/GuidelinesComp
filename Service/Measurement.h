@@ -17,25 +17,40 @@ struct Measurement
 {
     void reset() noexcept
     {
-        value.store(0.f);
+        peak.store(0.f);
     }
 
     void updateIfGreater(float newValue) noexcept
     {
-        auto oldValue = value.load();
-        while (newValue > oldValue && !value.compare_exchange_weak(oldValue, newValue));
+        auto oldValue = peak.load();
+        while (newValue > oldValue && !peak.compare_exchange_weak(oldValue, newValue));
+    }
+
+    void updateSmoothed() {
+        smoothed.setTargetValue(peak.load());
+    }
+
+    float getSmoothed() {
+        return smoothed.getNextValue();
     }
 
     float readAndReset() noexcept
     {
-        return value.exchange(0.f);
+        return peak.exchange(0.f);
     }
 
-    float getValue() const noexcept
+    float getPeak() const noexcept
     {
-        return value.load();
+        return peak.load();
+    }
+
+    void prepare(double sampleRate, double smoothingTimeSeconds)
+    {
+        smoothed.reset(sampleRate, smoothingTimeSeconds);
+        smoothed.setCurrentAndTargetValue(0.0f);
     }
 
 private:
-    std::atomic<float> value;
+    std::atomic<float> peak{ 0.0f };
+    juce::LinearSmoothedValue<float> smoothed{ 0.0f };
 };
