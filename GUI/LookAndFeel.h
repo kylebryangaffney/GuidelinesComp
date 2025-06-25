@@ -18,7 +18,7 @@
 // Color Scheme
 namespace Colors
 {
-    const juce::Colour background{ 0, 0, 0 };           // Black background
+    const juce::Colour background{ 30, 30, 30 };           // dark background
     const juce::Colour header{ 50, 50, 50 };        // Dark gray for headers
 
     namespace Knob
@@ -26,10 +26,10 @@ namespace Colors
         const juce::Colour trackBackground{ 0, 0, 0 };           // Background behind knob track
         const juce::Colour trackActive{ 255, 120, 40 };      // Golden amber
         const juce::Colour outline{ 110, 40, 140 };      // Regal purple
-        const juce::Colour gradientTop{ 255, 160, 110 };     // Soft coral
-        const juce::Colour gradientBottom{ 255, 100, 60 };      // Hot tangerine
-        const juce::Colour dial{ 150, 80, 200 };      // Luxurious violet
-        const juce::Colour dropShadow{ 25, 25, 25 };        // Soft dark shadow
+        const juce::Colour gradientTop{ 180, 180, 180 };     // light silver
+        const juce::Colour gradientBottom{ 60, 60, 60 };      // dark metal
+        const juce::Colour dial{ 0, 0, 0 };      // black
+        const juce::Colour dropShadow{ 50, 50, 50 };        // Soft dark shadow
         const juce::Colour label{ 240, 240, 240 };     // Elegant light gray
         const juce::Colour textBoxBackground{ 45, 45, 45 };        // Slightly darker gray
         const juce::Colour value{ 255, 255, 255 };     // White
@@ -40,15 +40,6 @@ namespace Colors
     {
         const juce::Colour label{ 230, 120, 50 };  // Dark orange
         const juce::Colour outline{ 102, 51, 153 };  // Royal plum
-    }
-
-    namespace Button
-    {
-        const juce::Colour text{ 230, 120, 50 };  // Deeper orange
-        const juce::Colour textToggled{ 255, 255, 255 }; // White when toggled
-        const juce::Colour background{ 50, 50, 50 };    // Dark gray
-        const juce::Colour backgroundToggled{ 102, 51, 153 };  // Royal plum when toggled
-        const juce::Colour outline{ 230, 120, 50 };  // Orange outline
     }
 
     namespace LevelMeter

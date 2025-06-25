@@ -30,7 +30,7 @@ private:
     RmsMeasurement& rmsMeasurementR;
 
     static constexpr float maxdB = 0.0f;   // top: no GR
-    static constexpr float mindB = 36.0f;  // bottom: max GR
+    static constexpr float mindB = 60.0f;  // bottom: max GR
     static constexpr float stepdB = 6.0f;
     static constexpr float clampdB = 0.0f;
     static constexpr float clampLevel = 0.000001f;
