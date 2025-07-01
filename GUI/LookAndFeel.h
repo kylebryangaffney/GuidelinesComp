@@ -18,47 +18,47 @@
 // Color Scheme
 namespace Colors
 {
-    const juce::Colour background{ 30, 30, 30 };           // dark background
-    const juce::Colour header{ 50, 50, 50 };        // Dark gray for headers
+    const juce::Colour background{ 30, 30, 30 };            // charcoal gray
+    const juce::Colour header{ 50, 50, 50 };                // dark gray
 
     namespace Knob
     {
-        const juce::Colour trackBackground{ 0, 0, 0 };           // Background behind knob track
-        const juce::Colour trackActive{ 255, 120, 40 };      // Golden amber
-        const juce::Colour outline{ 110, 40, 140 };      // Regal purple
-        const juce::Colour gradientTop{ 180, 180, 180 };     // light silver
-        const juce::Colour gradientBottom{ 60, 60, 60 };      // dark metal
-        const juce::Colour dial{ 0, 0, 0 };      // black
-        const juce::Colour dropShadow{ 50, 50, 50 };        // Soft dark shadow
-        const juce::Colour label{ 240, 240, 240 };     // Elegant light gray
-        const juce::Colour textBoxBackground{ 45, 45, 45 };        // Slightly darker gray
-        const juce::Colour value{ 255, 255, 255 };     // White
-        const juce::Colour caret{ 255, 130, 50 };      // Sunset orange
+        const juce::Colour trackBackground{ 0, 0, 0 };             // black
+        const juce::Colour outline{ 110, 40, 140 };                // regal purple
+        const juce::Colour gradientTop{ 60, 60, 60 };              // mid gray
+        const juce::Colour gradientBottom{ 30, 30, 30 };           // charcoal gray
+        const juce::Colour dial{ 255, 255, 255 };                  // white
+        const juce::Colour dropShadow{ 50, 50, 50 };               // dark gray
+        const juce::Colour label{ 240, 240, 240 };                 // light gray
+        const juce::Colour textBoxBackground{ 45, 45, 45 };        // deep gray
+        const juce::Colour value{ 255, 255, 255 };                 // white
+        const juce::Colour caret{ 255, 255, 255 };                 // white
+        const juce::Colour tick{ 50, 200, 180 };                   // teal
     }
 
     namespace Group
     {
-        const juce::Colour label{ 230, 120, 50 };  // Dark orange
-        const juce::Colour outline{ 102, 51, 153 };  // Royal plum
+        const juce::Colour label{ 230, 120, 50 };                  // orange
+        const juce::Colour outline{ 102, 51, 153 };                // plum
     }
 
     namespace LevelMeter
     {
-        const juce::Colour background{ 20, 20, 20 };        // Very dark gray
-        const juce::Colour tickLine{ 200, 200, 200 };      // Light gray ticks
-        const juce::Colour tickLabel{ 230, 120, 50 };       // Orange labels
-        const juce::Colour tooLoud{ 226, 74, 81 };        // Red for overload
-        const juce::Colour peakLevelOK{ 50, 200, 180 };   // lighter green
-        const juce::Colour rmsLevelOK{ 30, 120, 60 };    // darker green
+        const juce::Colour background{ 20, 20, 20 };               // near-black
+        const juce::Colour tickLine{ 200, 200, 200 };              // light gray
+        const juce::Colour tickLabel{ 230, 120, 50 };              // orange
+        const juce::Colour tooLoud{ 226, 74, 81 };                 // red
+        const juce::Colour peakLevelOK{ 50, 200, 180 };            // aqua green
+        const juce::Colour rmsLevelOK{ 30, 120, 60 };              // forest green
     }
 
     namespace Slider
     {
-        const juce::Colour sliderFill{ 160, 70, 220 };   // Purple accent
-        const juce::Colour standoutFill{ 50, 200, 180 };   // Cyan highlight
-        const juce::Colour sliderClippingFill{ 226, 74, 81 }; // Red for overload
+        const juce::Colour sliderFill{ 160, 70, 220 };             // violet
+        const juce::Colour sliderClippingFill{ 226, 74, 81 };      // red
     }
 }
+
 
 //==============================================================================
 // Font Style

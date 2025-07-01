@@ -10,11 +10,15 @@
 
 #include "LookAndFeel.h"
 
+
 //==============================================================================
 // Fonts
+
+// Loads and caches the LatoMedium font from binary data
 const juce::Typeface::Ptr Fonts::typeface = juce::Typeface::createSystemTypefaceFor(
     BinaryData::LatoMedium_ttf, BinaryData::LatoMedium_ttfSize);
 
+// Returns a styled font using the cached typeface
 juce::Font Fonts::getFont(float height)
 {
     return juce::FontOptions(typeface)
@@ -24,6 +28,8 @@ juce::Font Fonts::getFont(float height)
 
 //==============================================================================
 // RotaryKnobLookAndFeel
+
+// Constructor - sets default component colours for knobs
 RotaryKnobLookAndFeel::RotaryKnobLookAndFeel()
 {
     setColour(juce::Label::textColourId, Colors::Knob::label);
@@ -33,45 +39,40 @@ RotaryKnobLookAndFeel::RotaryKnobLookAndFeel()
     setColour(juce::CaretComponent::caretColourId, Colors::Knob::caret);
 }
 
+//==============================================================================
+// Knob rendering logic
+
 void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, int width,
     [[maybe_unused]] int height, float sliderPos,
     float rotaryStartAngle, float rotaryEndAngle,
     juce::Slider& slider)
 {
+    // Define rotary drawing area and center
     auto bounds = juce::Rectangle<float>(x, y, width, width);
     auto knobRect = bounds.reduced(10.f);
     auto knobCenter = knobRect.getCentre();
 
+    // Retrieve optional alert level (for peak/clipping color blending)
     auto* knob = dynamic_cast<RotaryKnob*>(slider.getParentComponent());
     float alertLevel = knob ? knob->getAlertLevel() : 0.0f;
 
-    // --- Teeth (drawn inward from outer radius)
-    const int numTeeth = 24;
-    const float toothDepth = 8.0f;
-    float outerRadius = knobRect.getWidth() / 2.0f;
-    float innerRadius = outerRadius - toothDepth;
+    // Draw outer tick marks around the knob
+    const int numTicks = 21;
+    const float tickLength = 7.0f;
+    const float tickThickness = 1.0f;
+    float tickRadius = knobRect.getWidth() / 2.0f + 2.0f;
 
-    juce::Path teethPath;
-    for (int i = 0; i < numTeeth; ++i)
+    for (int i = 0; i < numTicks; ++i)
     {
-        float angle = juce::MathConstants<float>::twoPi * i / numTeeth;
+        float angle = rotaryStartAngle + i * (rotaryEndAngle - rotaryStartAngle) / (numTicks - 1);
+        auto p1 = knobCenter.getPointOnCircumference(tickRadius, angle);
+        auto p2 = knobCenter.getPointOnCircumference(tickRadius + tickLength, angle);
 
-        auto outer = juce::Point<float>(
-            knobCenter.x + outerRadius * std::cos(angle),
-            knobCenter.y + outerRadius * std::sin(angle));
-
-        auto inner = juce::Point<float>(
-            knobCenter.x + innerRadius * std::cos(angle),
-            knobCenter.y + innerRadius * std::sin(angle));
-
-        teethPath.startNewSubPath(outer);
-        teethPath.lineTo(inner);
+        g.setColour(Colors::Knob::tick);
+        g.drawLine({ p1, p2 }, tickThickness);
     }
 
-    g.setColour(Colors::Knob::outline.withAlpha(0.4f));
-    g.strokePath(teethPath, juce::PathStrokeType(1.2f));
-
-    // --- Main knob body
+    // Draw main knob body with drop shadow and fill
     juce::Path knobShape;
     knobShape.addEllipse(knobRect);
     dropShadow.drawForPath(g, knobShape);
@@ -79,23 +80,19 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     g.setColour(Colors::Knob::outline);
     g.fillPath(knobShape);
 
-    // --- Radial lighting gradient
+    // Fill interior with flat vertical gradient for matte effect
     auto innerRect = knobRect.reduced(2.f);
-    auto centerPoint = innerRect.getCentre();
-    juce::ColourGradient radialGradient(
-        Colors::Knob::gradientTop, centerPoint.x, centerPoint.y,
-        Colors::Knob::gradientBottom.darker(0.3f), centerPoint.x, centerPoint.y + innerRect.getHeight() * 0.6f,
-        true
-    );
-    g.setGradientFill(radialGradient);
+    juce::ColourGradient gradient(Colors::Knob::gradientTop, 0.f, innerRect.getY(),
+        Colors::Knob::gradientBottom, 0.f, innerRect.getBottom(), false);
+    g.setGradientFill(gradient);
     g.fillEllipse(innerRect);
 
-    // --- Bevel rim
+    // Subtle highlight ring on knob
     auto bevelRect = innerRect.reduced(1.5f);
     g.setColour(juce::Colours::white.withAlpha(0.08f));
     g.drawEllipse(bevelRect, 1.0f);
 
-    // --- Arc background
+    // Draw arc track in background
     auto boundsCenter = bounds.getCentre();
     auto radius = bounds.getWidth() / 2.f;
     auto lineWidth = 3.f;
@@ -109,22 +106,21 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     g.setColour(Colors::Knob::trackBackground);
     g.strokePath(backgroundArc, stroke);
 
-    // --- Dial indicator line
+    // Draw dial pointer to indicate current value
     float toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
     auto dialRadius = innerRect.getHeight() / 2.f - lineWidth;
-
-    juce::Point<float> dialStart(boundsCenter.x + 8.f * std::sin(toAngle),
-        boundsCenter.y - 8.f * std::cos(toAngle));
-    juce::Point<float> dialEnd(boundsCenter.x + dialRadius * std::sin(toAngle),
-        boundsCenter.y - dialRadius * std::cos(toAngle));
+    juce::Point<float> dialStart(knobCenter.x + 8.f * std::sin(toAngle),
+        knobCenter.y - 8.f * std::cos(toAngle));
+    juce::Point<float> dialEnd(knobCenter.x + dialRadius * std::sin(toAngle),
+        knobCenter.y - dialRadius * std::cos(toAngle));
 
     juce::Path dialPath;
     dialPath.startNewSubPath(dialStart);
     dialPath.lineTo(dialEnd);
-    g.setColour(Colors::Knob::dial);
-    g.strokePath(dialPath, stroke);
+    g.setColour(Colors::Knob::caret);
+    g.strokePath(dialPath, juce::PathStrokeType(3.0f));
 
-    // --- Active value arc
+    // Draw active value arc based on position and alert level
     if (slider.isEnabled())
     {
         float fromAngle = rotaryStartAngle;
@@ -143,6 +139,8 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     }
 }
 
+//==============================================================================
+// Label and text box styling for rotary sliders
 
 juce::Font RotaryKnobLookAndFeel::getLabelFont([[maybe_unused]] juce::Label& label)
 {
@@ -184,6 +182,7 @@ public:
     }
 };
 
+// Custom label for rotary slider value entry
 juce::Label* RotaryKnobLookAndFeel::createSliderTextBox(juce::Slider& slider)
 {
     auto* label = new RotaryKnobLabel();
@@ -199,8 +198,7 @@ juce::Label* RotaryKnobLookAndFeel::createSliderTextBox(juce::Slider& slider)
     return label;
 }
 
-
-//======================================
+//==============================================================================
 // LevelMeterLookAndFeel
 
 void LevelMeterLookAndFeel::drawLevelMeter(juce::Graphics& g, const LevelMeter& meter)
@@ -209,27 +207,24 @@ void LevelMeterLookAndFeel::drawLevelMeter(juce::Graphics& g, const LevelMeter& 
     g.fillAll(Colors::LevelMeter::background);
     g.setFont(Fonts::getFont(10.f));
 
-    // Draw LEFT peak
+    // Draw peak and RMS meters for both left and right channels
     drawPeakLevel(g, meter.getPeakLevelL(), 0, 7,
         [&](float db) { return meter.positionForLevel(db); },
         meter.getHeight());
 
-    // RIGHT peak
     drawPeakLevel(g, meter.getPeakLevelR(), 9, 7,
         [&](float db) { return meter.positionForLevel(db); },
         meter.getHeight());
 
-    // LEFT RMS
     drawRmsLevel(g, meter.getRmsLevelL(), 1, 4,
         [&](float db) { return meter.positionForLevel(db); },
         meter.getHeight());
 
-    // RIGHT RMS
     drawRmsLevel(g, meter.getRmsLevelR(), 10, 4,
         [&](float db) { return meter.positionForLevel(db); },
         meter.getHeight());
 
-    // Ticks and labels
+    // Draw dB tick marks with numeric labels
     for (float db = meter.maxdB; db >= meter.mindB; db -= meter.stepdB)
     {
         int y = meter.positionForLevel(db);
@@ -244,6 +239,7 @@ void LevelMeterLookAndFeel::drawLevelMeter(juce::Graphics& g, const LevelMeter& 
     }
 }
 
+// Draws a single meter bar (RMS or peak)
 void LevelMeterLookAndFeel::drawMeterBar(juce::Graphics& g, float levelDB, int x, int width,
     juce::Colour fillColour,
     std::function<int(float)> positionForLevel,
@@ -270,6 +266,7 @@ void LevelMeterLookAndFeel::drawMeterBar(juce::Graphics& g, float levelDB, int x
     }
 }
 
+// Wrapper for drawing left/right peak levels
 void LevelMeterLookAndFeel::drawPeakLevel(juce::Graphics& g, float level, int x, int width,
     std::function<int(float)> positionForLevel, int height)
 {
@@ -277,13 +274,13 @@ void LevelMeterLookAndFeel::drawPeakLevel(juce::Graphics& g, float level, int x,
         positionForLevel, height);
 }
 
+// Wrapper for drawing left/right RMS levels
 void LevelMeterLookAndFeel::drawRmsLevel(juce::Graphics& g, float level, int x, int width,
     std::function<int(float)> positionForLevel, int height)
 {
     drawMeterBar(g, level, x, width, Colors::LevelMeter::rmsLevelOK,
         positionForLevel, height);
 }
-
 
 //==============================================================================
 // MainLookAndFeel
