@@ -96,6 +96,37 @@ public:
 
     void drawTextEditorOutline(juce::Graphics&, int, int, juce::TextEditor&) override {}
     void fillTextEditorBackground(juce::Graphics&, int width, int height, juce::TextEditor&) override;
+    void drawTicks(juce::Graphics& g,
+        int numTicks,
+        juce::Point<float> knobCenter,
+        float tickRadius,
+        float rotaryStartAngle,
+        float rotaryEndAngle);
+    void drawKnobBody(juce::Graphics& g, juce::Rectangle<float> knobRect);
+    void drawArcTrack(juce::Graphics& g, 
+        juce::Rectangle<float> bounds, 
+        juce::Point<float> boundsCenter,
+        float arcRadius, 
+        float rotaryStartAngle, 
+        float rotaryEndAngle, 
+        juce::PathStrokeType stroke);
+    void drawDialIndicator(juce::Graphics& g,
+        juce::Point<float> knobCenter,
+        float dialRadius,
+        float toAngle,
+        float lineWidth);
+    void drawValueArc(juce::Graphics& g,
+        juce::Slider& slider,
+        juce::Point<float> boundsCenter,
+        juce::PathStrokeType stroke,
+        float rotaryStartAngle, 
+        float rotaryEndAngle, 
+        float arcRadius, 
+        float toAngle,
+        float alertLevel
+        );
+
+
 
 private:
     juce::DropShadow dropShadow{ Colors::Knob::dropShadow, 6, { 0, 3 } };

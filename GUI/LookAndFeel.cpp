@@ -48,9 +48,9 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     juce::Slider& slider)
 {
     // Define rotary drawing area and center
-    auto bounds = juce::Rectangle<float>(x, y, width, width);
-    auto knobRect = bounds.reduced(10.f);
-    auto knobCenter = knobRect.getCentre();
+    juce::Rectangle<float> bounds = juce::Rectangle<float>(x, y, width, width);
+    juce::Rectangle<float> knobRect = bounds.reduced(10.f);
+    juce::Point<float> knobCenter = knobRect.getCentre();
 
     // Retrieve optional alert level (for peak/clipping color blending)
     auto* knob = dynamic_cast<RotaryKnob*>(slider.getParentComponent());
@@ -58,27 +58,11 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
 
     // Draw outer tick marks around the knob
     const int numTicks = 21;
-    const float tickLength = 7.0f;
-    const float tickThickness = 1.0f;
     float tickRadius = knobRect.getWidth() / 2.0f + 2.0f;
-
-    for (int i = 0; i < numTicks; ++i)
-    {
-        float angle = rotaryStartAngle + i * (rotaryEndAngle - rotaryStartAngle) / (numTicks - 1);
-        auto p1 = knobCenter.getPointOnCircumference(tickRadius, angle);
-        auto p2 = knobCenter.getPointOnCircumference(tickRadius + tickLength, angle);
-
-        g.setColour(Colors::Knob::tick);
-        g.drawLine({ p1, p2 }, tickThickness);
-    }
+    drawTicks(g, numTicks, knobCenter, tickRadius, rotaryStartAngle, rotaryEndAngle);
 
     // Draw main knob body with drop shadow and fill
-    juce::Path knobShape;
-    knobShape.addEllipse(knobRect);
-    dropShadow.drawForPath(g, knobShape);
-
-    g.setColour(Colors::Knob::outline);
-    g.fillPath(knobShape);
+    drawKnobBody(g, knobRect);
 
     // Fill interior with flat vertical gradient for matte effect
     auto innerRect = knobRect.reduced(2.f);
@@ -93,24 +77,81 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     g.drawEllipse(bevelRect, 1.0f);
 
     // Draw arc track in background
-    auto boundsCenter = bounds.getCentre();
-    auto radius = bounds.getWidth() / 2.f;
-    auto lineWidth = 3.f;
-    auto arcRadius = radius - lineWidth / 2.f;
+    juce::Point<float> boundsCenter = bounds.getCentre();
+    float radius = bounds.getWidth() / 2.f;
+    float lineWidth = 3.f;
+    float arcRadius = radius - lineWidth / 2.f;
+    juce::PathStrokeType stroke(lineWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded);
+
+    drawArcTrack(g, bounds, boundsCenter, arcRadius, rotaryStartAngle, rotaryEndAngle, stroke);
+    
+
+    // Draw dial pointer to indicate current value
+    float toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+    auto dialRadius = innerRect.getHeight() / 2.f - lineWidth;
+    drawDialIndicator(g, knobCenter, dialRadius, toAngle, lineWidth);
+
+
+    // Draw active value arc based on position and alert level
+    if (slider.isEnabled())
+    {
+        drawValueArc(g, slider, boundsCenter, stroke, rotaryStartAngle, rotaryEndAngle, arcRadius, toAngle, alertLevel);
+    }
+}
+
+void RotaryKnobLookAndFeel::drawTicks(juce::Graphics& g,
+    int numTicks,
+    juce::Point<float> knobCenter,
+    float tickRadius,
+    float rotaryStartAngle,
+    float rotaryEndAngle)
+{
+    const float tickLength = 7.0f;
+    const float tickThickness = 1.0f;
+
+    for (int i = 0; i < numTicks; ++i)
+    {
+        float angle = rotaryStartAngle + i * (rotaryEndAngle - rotaryStartAngle) / (numTicks - 1);
+        auto p1 = knobCenter.getPointOnCircumference(tickRadius, angle);
+        auto p2 = knobCenter.getPointOnCircumference(tickRadius + tickLength, angle);
+
+        g.setColour(Colors::Knob::tick);
+        g.drawLine({ p1, p2 }, tickThickness);
+    }
+}
+
+void RotaryKnobLookAndFeel::drawKnobBody(juce::Graphics& g, juce::Rectangle<float> knobRect)
+{
+    juce::Path knobShape;
+    knobShape.addEllipse(knobRect);
+    dropShadow.drawForPath(g, knobShape);
+
+    g.setColour(Colors::Knob::outline);
+    g.fillPath(knobShape);
+}
+
+void RotaryKnobLookAndFeel::drawArcTrack(juce::Graphics& g, juce::Rectangle<float> bounds, juce::Point<float> boundsCenter, float arcRadius, float rotaryStartAngle, float rotaryEndAngle, juce::PathStrokeType stroke)
+{
+    // Draw arc track in background
 
     juce::Path backgroundArc;
     backgroundArc.addCentredArc(boundsCenter.x, boundsCenter.y, arcRadius, arcRadius, 0.f,
         rotaryStartAngle, rotaryEndAngle, true);
 
-    juce::PathStrokeType stroke(lineWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded);
     g.setColour(Colors::Knob::trackBackground);
     g.strokePath(backgroundArc, stroke);
+}
 
-    // Draw dial pointer to indicate current value
-    float toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
-    auto dialRadius = innerRect.getHeight() / 2.f - lineWidth;
-    juce::Point<float> dialStart(knobCenter.x + 8.f * std::sin(toAngle),
-        knobCenter.y - 8.f * std::cos(toAngle));
+
+void RotaryKnobLookAndFeel::drawDialIndicator(juce::Graphics& g,
+    juce::Point<float> knobCenter,
+    float dialRadius,
+    float toAngle,
+    float lineWidth)
+{
+
+    juce::Point<float> dialStart(knobCenter.x + 2.f * std::sin(toAngle),
+        knobCenter.y - 2.f * std::cos(toAngle));
     juce::Point<float> dialEnd(knobCenter.x + dialRadius * std::sin(toAngle),
         knobCenter.y - dialRadius * std::cos(toAngle));
 
@@ -120,23 +161,39 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     g.setColour(Colors::Knob::caret);
     g.strokePath(dialPath, juce::PathStrokeType(3.0f));
 
-    // Draw active value arc based on position and alert level
-    if (slider.isEnabled())
-    {
-        float fromAngle = rotaryStartAngle;
-        if (slider.getProperties()["drawFromMiddle"])
-            fromAngle += (rotaryEndAngle - rotaryStartAngle) / 2.f;
+    juce::Rectangle<float> innerCircleRect(
+        knobCenter.x - dialRadius,
+        knobCenter.y - dialRadius,
+        dialRadius * 2,
+        dialRadius * 2);
 
-        juce::Path valueArc;
-        valueArc.addCentredArc(boundsCenter.x, boundsCenter.y, arcRadius, arcRadius, 0.f,
-            fromAngle, toAngle, true);
+    g.drawEllipse(innerCircleRect, lineWidth);
+}
 
-        juce::Colour finalFillColor = Colors::Slider::sliderFill
-            .interpolatedWith(Colors::Slider::sliderClippingFill, alertLevel);
+void RotaryKnobLookAndFeel::drawValueArc(juce::Graphics& g,
+    juce::Slider& slider,
+    juce::Point<float> boundsCenter,
+    juce::PathStrokeType stroke,
+    float rotaryStartAngle,
+    float rotaryEndAngle,
+    float arcRadius,
+    float toAngle,
+    float alertLevel
+)
+{
+    float fromAngle = rotaryStartAngle;
+    if (slider.getProperties()["drawFromMiddle"])
+        fromAngle += (rotaryEndAngle - rotaryStartAngle) / 2.f;
 
-        g.setColour(finalFillColor);
-        g.strokePath(valueArc, stroke);
-    }
+    juce::Path valueArc;
+    valueArc.addCentredArc(boundsCenter.x, boundsCenter.y, arcRadius, arcRadius, 0.f,
+        fromAngle, toAngle, true);
+
+    juce::Colour finalFillColor = Colors::Slider::sliderFill
+        .interpolatedWith(Colors::Slider::sliderClippingFill, alertLevel);
+
+    g.setColour(finalFillColor);
+    g.strokePath(valueArc, stroke);
 }
 
 //==============================================================================
