@@ -20,4 +20,7 @@ public:
     AsymmetricalRotaryKnob(const juce::String& text,
         juce::AudioProcessorValueTreeState& apvts,
         const juce::ParameterID& parameterID);
+
+    virtual int getNumTicks() const { return 18; }
+    
 };

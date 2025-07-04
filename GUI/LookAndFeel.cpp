@@ -57,7 +57,7 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     float alertLevel = knob ? knob->getAlertLevel() : 0.0f;
 
     // Draw outer tick marks around the knob
-    const int numTicks = 21;
+    const int numTicks = knob->getNumTicks();
     float tickRadius = knobRect.getWidth() / 2.0f + 2.0f;
     drawTicks(g, numTicks, knobCenter, tickRadius, rotaryStartAngle, rotaryEndAngle);
 
