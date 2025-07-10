@@ -41,21 +41,6 @@ struct RmsMeasurement
         return value.load();
     }
 
-    void updateDirect(float value) noexcept
-    {
-        sumSquares.fetch_add(value);
-        numSamples.fetch_add(1);
-    }
-
-    void computeAverage() noexcept
-    {
-        float sum = sumSquares.exchange(0.f);
-        int count = numSamples.exchange(0);
-        float avg = (count > 0) ? sum / count : 0.0f;
-        value.store(avg);
-    }
-
-
 private:
     std::atomic<float> sumSquares{ 0.f };
     std::atomic<int> numSamples{ 0 };

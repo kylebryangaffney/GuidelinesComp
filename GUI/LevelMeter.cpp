@@ -45,17 +45,17 @@ void LevelMeter::paint(juce::Graphics& g)
 
 void LevelMeter::resized()
 {
-    const float height = float(getHeight());
+    const float width = float(getWidth());
 
-    if (height < 10.f)
+    if (width < 10.f)
     {
-        maxPos = 4.f;
-        minPos = 10.f; // safe fallback
+        minPos = 4.f;
+        maxPos = 10.f;
     }
     else
     {
-        maxPos = 4.f;
-        minPos = height - 4.f;
+        minPos = 4.f;
+        maxPos = width - 4.f;
     }
 }
 

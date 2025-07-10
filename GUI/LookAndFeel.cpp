@@ -57,7 +57,7 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     float alertLevel = knob ? knob->getAlertLevel() : 0.0f;
 
     // Draw outer tick marks around the knob
-    const int numTicks = knob->getNumTicks();
+    int numTicks = knob ? knob->getNumTicks() : 0;
     float tickRadius = knobRect.getWidth() / 2.0f + 2.0f;
     drawTicks(g, numTicks, knobCenter, tickRadius, rotaryStartAngle, rotaryEndAngle);
 
@@ -265,78 +265,134 @@ void LevelMeterLookAndFeel::drawLevelMeter(juce::Graphics& g, const LevelMeter& 
     g.setFont(Fonts::getFont(10.f));
 
     // Draw peak and RMS meters for both left and right channels
-    drawPeakLevel(g, meter.getPeakLevelL(), 0, 7,
-        [&](float db) { return meter.positionForLevel(db); },
-        meter.getHeight());
+    drawPeakLevel(0, 4, meter.getWidth(), 7, g, meter.getPeakLevelL(),
+        [&](float db) { return meter.positionForLevel(db); });
 
-    drawPeakLevel(g, meter.getPeakLevelR(), 9, 7,
-        [&](float db) { return meter.positionForLevel(db); },
-        meter.getHeight());
+    drawPeakLevel(0, 7, meter.getWidth(), 7, g, meter.getPeakLevelR(),
+        [&](float db) { return meter.positionForLevel(db); });
 
-    drawRmsLevel(g, meter.getRmsLevelL(), 1, 4,
-        [&](float db) { return meter.positionForLevel(db); },
-        meter.getHeight());
+    drawRmsLevel(0, 4, meter.getWidth(), 4, g, meter.getRmsLevelL(),
+        [&](float db) { return meter.positionForLevel(db); });
 
-    drawRmsLevel(g, meter.getRmsLevelR(), 10, 4,
-        [&](float db) { return meter.positionForLevel(db); },
-        meter.getHeight());
+    drawRmsLevel(0, 7, meter.getWidth(), 4, g, meter.getRmsLevelR(),
+        [&](float db) { return meter.positionForLevel(db); });
 
     // Draw dB tick marks with numeric labels
     for (float db = meter.maxdB; db >= meter.mindB; db -= meter.stepdB)
     {
-        int y = meter.positionForLevel(db);
+        int x = meter.positionForLevel(db);
         g.setColour(Colors::LevelMeter::tickLine);
-        g.fillRect(0, y, 16, 1);
+        g.fillRect(x, 0, 1, 14);
 
         g.setColour(Colors::LevelMeter::tickLabel);
-        g.drawSingleLineText(juce::String(int(db)),
-            bounds.getWidth(),
-            y + 3,
-            juce::Justification::right);
+        g.drawText(
+            juce::String(int(db)),
+            x - 12,   // left (center label under tick)
+            15,       // top (just below tick)
+            24,       // width
+            12,       // height
+            juce::Justification::centred
+        );
     }
 }
 
 // Draws a single meter bar (RMS or peak)
-void LevelMeterLookAndFeel::drawMeterBar(juce::Graphics& g, float levelDB, int x, int width,
-    juce::Colour fillColour,
-    std::function<int(float)> positionForLevel,
-    int height)
+void LevelMeterLookAndFeel::drawMeterBar(int x, int y, int width, int height, juce::Graphics& g, float levelDB,
+    std::function<int(float)> positionForLevel, juce::Colour fillColour)
 {
     if (levelDB <= clampdB)
         return;
 
-    const int yStart = juce::jlimit(0, height, positionForLevel(levelDB));
-    const int yZero = juce::jlimit(0, height, positionForLevel(0.0f));
+    const int xStart = juce::jlimit(x, x + width, positionForLevel(levelDB));
+    const int xZero = juce::jlimit(x, x + width, positionForLevel(0.0f));
 
-    if (yStart < yZero)
+    if (xStart > xZero)
     {
-        g.setColour(Colors::LevelMeter::tooLoud);
-        g.fillRect(x, yStart, width, yZero - yStart);
-
         g.setColour(fillColour);
-        g.fillRect(x, yZero, width, height - yZero);
+        g.fillRect(x, y, xZero - x, height);
+
+        g.setColour(Colors::LevelMeter::tooLoud);
+        g.fillRect(xZero, y, xStart - xZero, height);
     }
     else
     {
         g.setColour(fillColour);
-        g.fillRect(x, yStart, width, height - yStart);
+        g.fillRect(x, y, xStart - x, height);
     }
 }
 
 // Wrapper for drawing left/right peak levels
-void LevelMeterLookAndFeel::drawPeakLevel(juce::Graphics& g, float level, int x, int width,
-    std::function<int(float)> positionForLevel, int height)
+void LevelMeterLookAndFeel::drawPeakLevel(int x, int y, int width, int height,
+    juce::Graphics& g,
+    float levelDB,
+    std::function<int(float)> positionForLevel)
 {
-    drawMeterBar(g, level, x, width, Colors::LevelMeter::peakLevelOK,
-        positionForLevel, height);
+    drawMeterBar(x, y, width, height, g, levelDB, positionForLevel, Colors::LevelMeter::peakLevelOK);
+}
+// Wrapper for drawing left/right RMS levels  rmsLevelOK
+void LevelMeterLookAndFeel::drawRmsLevel(int x, int y, int width, int height,
+    juce::Graphics& g,
+    float levelDB,
+    std::function<int(float)> positionForLevel)
+{
+    drawMeterBar(x, y, width, height, g, levelDB, positionForLevel, Colors::LevelMeter::rmsLevelOK);
 }
 
-// Wrapper for drawing left/right RMS levels
-void LevelMeterLookAndFeel::drawRmsLevel(juce::Graphics& g, float level, int x, int width,
-    std::function<int(float)> positionForLevel, int height)
+
+//=================================
+// GainReductionMeterLookAndFeel
+void GainReductionMeterLookAndFeel::drawGainReductionMeter(juce::Graphics& g, const GainReductionMeter& meter)
 {
-    drawMeterBar(g, level, x, width, Colors::LevelMeter::rmsLevelOK,
-        positionForLevel, height);
+    const auto bounds = meter.getLocalBounds();
+    g.fillAll(Colors::LevelMeter::background);
+    g.setFont(Fonts::getFont(10.f));
+
+    // Draw RMS bar, using same wrappers as LevelMeter
+    drawRmsLevel(0, 2, meter.getWidth(), 7, g, meter.getMaxRmsLevel(),
+        [&](float db) { return meter.positionForLevel(db); });
+
+    // Draw vertical ticks and labels
+    for (float db = GainReductionMeter::maxdB; db >= GainReductionMeter::mindB; db -= GainReductionMeter::stepdB)
+    {
+        int x = meter.positionForLevel(db);
+        g.setColour(Colors::LevelMeter::tickLine);
+        g.fillRect(x, 0, 1, 10);
+
+        g.setColour(Colors::LevelMeter::tickLabel);
+        g.drawText(
+            juce::String(int(db)),
+            x - 14, 12, 28, 12, juce::Justification::centred
+        );
+    }
+}
+
+// Horizontal bar
+void GainReductionMeterLookAndFeel::drawMeterBar(
+    int x, int y, int width, int height, juce::Graphics& g, float levelDB,
+    std::function<int(float)> positionForLevel, juce::Colour fillColour)
+{
+    float clampedDB = juce::jlimit(GainReductionMeter::mindB, GainReductionMeter::maxdB, levelDB);
+
+    int xRight = juce::jlimit(x, x + width, positionForLevel(GainReductionMeter::maxdB));  // no reduction (right)
+    int xEnd = juce::jlimit(x, x + width, positionForLevel(clampedDB));                  // current reduction
+
+    // Draw gain reduction bar
+    if (xEnd < xRight)
+    {
+        g.setColour(fillColour);
+        g.fillRect(xEnd, y, xRight - xEnd, height);
+    }
+}
+
+
+// Wrapper for drawing left/right RMS levels
+void GainReductionMeterLookAndFeel::drawRmsLevel(
+    int x, int y, int width, int height,
+    juce::Graphics& g,
+    float levelDB,
+    std::function<int(float)> positionForLevel)
+{
+    drawMeterBar(x, y, width, height, g, levelDB, positionForLevel, Colors::LevelMeter::gainReduction);
 }
 
 //==============================================================================

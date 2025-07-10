@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "RotaryKnob.h"
 #include "LevelMeter.h"
+#include "GainReductionMeter.h"
 
 //==============================================================================
 // Color Scheme
@@ -45,11 +46,13 @@ namespace Colors
     namespace LevelMeter
     {
         const juce::Colour background{ 20, 20, 20 };               // near-black
-        const juce::Colour tickLine{ 200, 200, 200 };              // light gray
-        const juce::Colour tickLabel{ 230, 120, 50 };              // orange
+        const juce::Colour tickLine{ 225, 225, 225 };              // light gray
+        const juce::Colour tickLabel{ 230, 230, 230 };              // orange
         const juce::Colour tooLoud{ 226, 74, 81 };                 // red
         const juce::Colour peakLevelOK{ 50, 200, 180 };            // aqua green
         const juce::Colour rmsLevelOK{ 30, 120, 60 };              // forest green
+        const juce::Colour gainReduction{ 230, 120, 50 };          // orange
+
     }
 
     namespace Slider
@@ -150,20 +153,48 @@ public:
     }
 
     void drawLevelMeter(juce::Graphics& g, const LevelMeter& meter);
-    void drawMeterBar(juce::Graphics& g, float levelDB, int x, int width,
-        juce::Colour fillColour,
-        std::function<int(float)> positionForLevel, int height);
+    void drawMeterBar(int x, int y, int width, int height, juce::Graphics& g, float levelDB,
+        std::function<int(float)> positionForLevel, juce::Colour fillColour);
+    void drawPeakLevel(int x, int y, int width, int height,
+        juce::Graphics& g,
+        float levelDB,
+        std::function<int(float)> positionForLevel);
+    void drawRmsLevel(int x, int y, int width, int height,
+        juce::Graphics& g,
+        float levelDB,
+        std::function<int(float)> positionForLevel);
 
-    void drawPeakLevel(juce::Graphics& g, float level, int x, int width,
-        std::function<int(float)> positionForLevel, int height);
-
-    void drawRmsLevel(juce::Graphics& g, float level, int x, int width,
-        std::function<int(float)> positionForLevel, int height);
 
 private:
     const float clampdB = -120.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeterLookAndFeel)
+};
+
+
+//==============================================================================
+// Gain Reduction Meter Look and Feel
+class GainReductionMeterLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    GainReductionMeterLookAndFeel() = default;
+    static GainReductionMeterLookAndFeel* get()
+    {
+        static GainReductionMeterLookAndFeel instance;
+        return &instance;
+    }
+
+    void drawGainReductionMeter(juce::Graphics& g, const GainReductionMeter& meter);
+    void drawMeterBar(int x, int y, int width, int height, juce::Graphics& g, float levelDB,
+        std::function<int(float)> positionForLevel, juce::Colour fillColour);
+    void drawRmsLevel(int x, int y, int width, int height,
+        juce::Graphics& g,
+        float levelDB,
+        std::function<int(float)> positionForLevel);
+
+private:
+    const float clampdB = -120.0f;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainReductionMeterLookAndFeel)
 };
 
 

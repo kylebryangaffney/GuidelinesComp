@@ -13,33 +13,32 @@
 #include <JuceHeader.h>
 #include "../Service/RMSMeasurement.h"
 
-//==============================================================================
 class GainReductionMeter : public juce::Component,
     private juce::Timer
 {
 public:
-    GainReductionMeter(RmsMeasurement& rmsMeasurementL, RmsMeasurement& rmsMeasurementR);
+    GainReductionMeter(RmsMeasurement& rmsL, RmsMeasurement& rmsR);
     ~GainReductionMeter() override;
 
     void paint(juce::Graphics&) override;
     void resized() override;
 
+    int positionForLevel(float dbLevel) const noexcept;
+
+    float getMaxRmsLevel() const;
+    static constexpr float maxdB = 0.0f;
+    static constexpr float mindB = -60.0f;
+    static constexpr float stepdB = 6.0f;
+
 private:
-    //==============================================================================
     RmsMeasurement& rmsMeasurementL;
     RmsMeasurement& rmsMeasurementR;
 
-    static constexpr float maxdB = 0.0f;   // top: no GR
-    static constexpr float mindB = 60.0f;  // bottom: max GR
-    static constexpr float stepdB = 6.0f;
-    static constexpr float clampdB = 0.0f;
+    static constexpr float clampdB = mindB;
     static constexpr float clampLevel = 0.000001f;
     static constexpr int refreshRate = 60;
-    static constexpr float maxReduction = 36.0f;
 
     float decay = 0.f;
-    float dbLevelL = 0.f;
-    float dbLevelR = 0.f;
     float maxPos = 0.f;
     float minPos = 0.f;
 
@@ -48,17 +47,8 @@ private:
     float dbRmsLevelL = 0.f;
     float dbRmsLevelR = 0.f;
 
-    //==============================================================================
     void timerCallback() override;
-
-    int positionForLevel(float dbLevel) const noexcept
-    {
-        return int(std::round(juce::jmap(dbLevel, maxdB, mindB, maxPos, minPos)));
-    }
-
-    void drawRmsLevel(juce::Graphics& g, float level, int x, int width);
     void updateLevel(float newLevel, float& smoothedLevel, float& leveldB) const;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GainReductionMeter)
 };
-

@@ -24,7 +24,6 @@ public:
     void processCompression(juce::dsp::ProcessContextReplacing<float> context);
 
 private:
-private:
     juce::dsp::Gain<float> optoGain;
     juce::LinearSmoothedValue<float> smoothedGain;
 

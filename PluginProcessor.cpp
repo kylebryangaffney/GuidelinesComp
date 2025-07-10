@@ -147,8 +147,6 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
     updateLowCutFilter();
     updateMappedCompressorParameters();
 
-    rmsTotalGainReductionLeft.reset();
-    rmsTotalGainReductionRight.reset();
     peakOutputLevelLeft.reset();
     peakOutputLevelRight.reset();
 
@@ -211,9 +209,23 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
     float totalGR_L = juce::Decibels::gainToDecibels(rmsInputL) - juce::Decibels::gainToDecibels(rmsCompBOutL);
     float totalGR_R = juce::Decibels::gainToDecibels(rmsInputR) - juce::Decibels::gainToDecibels(rmsCompBOutR);
+    
+    float grL = 1.0f;
+    if (rmsInputL > 0.0f && rmsCompBOutL > 0.0f)
+        grL = rmsCompBOutL / rmsInputL;
 
-    rmsTotalGainReductionLeft.updateDirect(totalGR_L);
-    rmsTotalGainReductionRight.updateDirect(totalGR_R);
+    float grR = 1.0f;
+    if (rmsInputR > 0.0f && rmsCompBOutR > 0.0f)
+        grR = rmsCompBOutR / rmsInputR;
+
+    rmsTotalGainReductionLeft.update(grL);
+    rmsTotalGainReductionRight.update(grR);
+
+    rmsTotalGainReductionLeft.computeRMS();
+    rmsTotalGainReductionRight.computeRMS();
+
+    float rmsGainReductionDbL = juce::Decibels::gainToDecibels(rmsTotalGainReductionLeft.getValue());
+    float rmsGainReductionDbR = juce::Decibels::gainToDecibels(rmsTotalGainReductionRight.getValue());
 
     compAGainReductionDbLeft.store(
         juce::Decibels::gainToDecibels(rmsInputL) - juce::Decibels::gainToDecibels(rmsCompAOutL));
@@ -230,9 +242,6 @@ void GuideLinesCompAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer
 
     compressionAmountForKnob.store(juce::jmax(compAMax, compBMax));
     peakOutputLevelForKnob.store(juce::jmax(peakOutputLevelLeft.getPeak(), peakOutputLevelRight.getPeak()));
-
-    rmsTotalGainReductionLeft.computeAverage();
-    rmsTotalGainReductionRight.computeAverage();
 
 #if JUCE_DEBUG
     protectYourEars(buffer);
