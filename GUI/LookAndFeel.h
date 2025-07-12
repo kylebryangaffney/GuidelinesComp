@@ -130,7 +130,6 @@ public:
         );
 
 
-
 private:
     juce::DropShadow dropShadow{ Colors::Knob::dropShadow, 6, { 0, 3 } };
 

@@ -18,27 +18,27 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     addAndMakeVisible(lowCutKnob);
 
     // Compress group
-    compressGroup.setText("Compress");
-    compressGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    //compressGroup.setText("Compress");
+    //compressGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     compressGroup.addAndMakeVisible(compressionKnob);
     compressGroup.addAndMakeVisible(inputMeter);
     addAndMakeVisible(compressGroup);
 
     // Control group
-    controlGroup.setText("Control");
-    controlGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    //controlGroup.setText("Control");
+    //controlGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     controlGroup.addAndMakeVisible(controlKnob);
     controlGroup.addAndMakeVisible(gRMeter);
     addAndMakeVisible(controlGroup);
 
     // Output group
-    outputGroup.setText("Output");
-    outputGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
+    //outputGroup.setText("Output");
+    //outputGroup.setTextLabelPosition(juce::Justification::horizontallyCentred);
     outputGroup.addAndMakeVisible(outputGainKnob);
     outputGroup.addAndMakeVisible(outputMeter);
     addAndMakeVisible(outputGroup);
 
-    setSize(900, 500);
+    setSize(450, 700);
     startTimerHz(60);
 }
 
@@ -63,30 +63,31 @@ void GuideLinesCompAudioProcessorEditor::resized()
 
     int headerHeight = 50;
     int presetPanelHeight = 40;
+    int knobWidth = 60;
     int padding = 15;
     int y = headerHeight + presetPanelHeight + padding;
 
-    int groupWidth = 200;
-    int groupHeight = bounds.getHeight() - y - padding;
-    int groupSpacing = padding;
+    int groupWidth = bounds.getWidth() - 3 * padding;
+    int groupHeight = 130;
+    int meterWidth = groupWidth - knobWidth - (6 * padding);
 
     lowCutKnob.setTopLeftPosition(padding, y + padding);
 
-    compressGroup.setBounds(lowCutKnob.getRight() + groupSpacing, y, groupWidth, groupHeight);
-    controlGroup.setBounds(compressGroup.getRight() + groupSpacing, y, groupWidth, groupHeight);
-    outputGroup.setBounds(controlGroup.getRight() + groupSpacing, y, groupWidth, groupHeight);
+    compressGroup.setBounds(padding, lowCutKnob.getBottom() + padding, groupWidth, groupHeight);
+    controlGroup.setBounds(padding, compressGroup.getBottom() + padding, groupWidth, groupHeight);
+    outputGroup.setBounds(padding, controlGroup.getBottom() + padding, groupWidth, groupHeight);
 
     auto compressArea = compressGroup.getLocalBounds().reduced(padding);
     compressionKnob.setTopLeftPosition(compressArea.getX(), compressArea.getY());
-    inputMeter.setBounds(compressArea.getX(), compressionKnob.getBottom() + padding, groupWidth - 2 * padding, 160);
+    inputMeter.setBounds(compressionKnob.getRight() + padding, compressionKnob.getY() + 2 * padding, meterWidth, 60);
 
     auto controlArea = controlGroup.getLocalBounds().reduced(padding);
     controlKnob.setTopLeftPosition(controlArea.getX(), controlArea.getY());
-    gRMeter.setBounds(controlArea.getX(), controlKnob.getBottom() + padding, groupWidth - 2 * padding, 160);
+    gRMeter.setBounds(controlKnob.getRight() + padding, controlKnob.getY() + 2 * padding, meterWidth, 60);
 
     auto outputArea = outputGroup.getLocalBounds().reduced(padding);
     outputGainKnob.setTopLeftPosition(outputArea.getX(), outputArea.getY());
-    outputMeter.setBounds(outputArea.getX(), outputGainKnob.getBottom() + padding, groupWidth - 2 * padding, 160);
+    outputMeter.setBounds(outputGainKnob.getRight() + padding, outputGainKnob.getY() + 2 * padding, meterWidth, 60);
 }
 
 

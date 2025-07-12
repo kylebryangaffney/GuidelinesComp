@@ -35,10 +35,10 @@ private:
     MainLookAndFeel mainLF;
 
     GuideLinesCompAudioProcessor& audioProcessor;
-    RotaryKnob lowCutKnob{ "Low Cut", audioProcessor.apvts, lowCutParamID };
-    RotaryKnob compressionKnob{ "", audioProcessor.apvts, compressionParamID };
-    RotaryKnob controlKnob{ "", audioProcessor.apvts, controlParamID };
-    AsymmetricalRotaryKnob outputGainKnob{ "", audioProcessor.apvts, outputGainParamID };
+    RotaryKnob lowCutKnob{ "Lo Cut", audioProcessor.apvts, lowCutParamID };
+    RotaryKnob compressionKnob{ "Strenth", audioProcessor.apvts, compressionParamID };
+    RotaryKnob controlKnob{ "Shape", audioProcessor.apvts, controlParamID };
+    AsymmetricalRotaryKnob outputGainKnob{ "Out", audioProcessor.apvts, outputGainParamID };
 
     LevelMeter inputMeter{
         audioProcessor.peakInputLevelLeft, audioProcessor.peakInputLevelRight,

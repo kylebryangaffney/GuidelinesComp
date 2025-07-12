@@ -133,7 +133,6 @@ void RotaryKnobLookAndFeel::drawKnobBody(juce::Graphics& g, juce::Rectangle<floa
 void RotaryKnobLookAndFeel::drawArcTrack(juce::Graphics& g, juce::Rectangle<float> bounds, juce::Point<float> boundsCenter, float arcRadius, float rotaryStartAngle, float rotaryEndAngle, juce::PathStrokeType stroke)
 {
     // Draw arc track in background
-
     juce::Path backgroundArc;
     backgroundArc.addCentredArc(boundsCenter.x, boundsCenter.y, arcRadius, arcRadius, 0.f,
         rotaryStartAngle, rotaryEndAngle, true);
