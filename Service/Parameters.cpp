@@ -31,10 +31,9 @@ static float hzFromString(const juce::String& str)
     return value < 20.f ? value * 1000.f : value;
 }
 
-
 static juce::String stringFromDecimal(float value, int)
 {
-    return juce::String(value, 3);
+    return juce::String(int(value));
 }
 
 static float decimalFromString(const juce::String& str)

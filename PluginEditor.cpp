@@ -38,7 +38,7 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     outputGroup.addAndMakeVisible(outputMeter);
     addAndMakeVisible(outputGroup);
 
-    setSize(450, 700);
+    setSize(400, 600);
     startTimerHz(60);
 }
 
@@ -63,13 +63,14 @@ void GuideLinesCompAudioProcessorEditor::resized()
 
     int headerHeight = 50;
     int presetPanelHeight = 40;
-    int knobWidth = 60;
-    int padding = 15;
+    int knobWidth = 57;
+    int padding = 10;
     int y = headerHeight + presetPanelHeight + padding;
 
     int groupWidth = bounds.getWidth() - 3 * padding;
-    int groupHeight = 130;
-    int meterWidth = groupWidth - knobWidth - (6 * padding);
+    int groupHeight = 120;
+    int meterWidth = groupWidth - knobWidth - (3 * padding);
+    int meterHeight = 55;
 
     lowCutKnob.setTopLeftPosition(padding, y + padding);
 
@@ -79,15 +80,15 @@ void GuideLinesCompAudioProcessorEditor::resized()
 
     auto compressArea = compressGroup.getLocalBounds().reduced(padding);
     compressionKnob.setTopLeftPosition(compressArea.getX(), compressArea.getY());
-    inputMeter.setBounds(compressionKnob.getRight() + padding, compressionKnob.getY() + 2 * padding, meterWidth, 60);
+    inputMeter.setBounds(compressionKnob.getRight() + padding, compressionKnob.getY() + 2 * padding, meterWidth, meterHeight);
 
     auto controlArea = controlGroup.getLocalBounds().reduced(padding);
     controlKnob.setTopLeftPosition(controlArea.getX(), controlArea.getY());
-    gRMeter.setBounds(controlKnob.getRight() + padding, controlKnob.getY() + 2 * padding, meterWidth, 60);
+    gRMeter.setBounds(controlKnob.getRight() + padding, controlKnob.getY() + 2 * padding, meterWidth, meterHeight);
 
     auto outputArea = outputGroup.getLocalBounds().reduced(padding);
     outputGainKnob.setTopLeftPosition(outputArea.getX(), outputArea.getY());
-    outputMeter.setBounds(outputGainKnob.getRight() + padding, outputGainKnob.getY() + 2 * padding, meterWidth, 60);
+    outputMeter.setBounds(outputGainKnob.getRight() + padding, outputGainKnob.getY() + 2 * padding, meterWidth, meterHeight);
 }
 
 

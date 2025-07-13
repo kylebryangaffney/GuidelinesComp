@@ -361,13 +361,6 @@ void GuideLinesCompAudioProcessor::updateMappedCompressorParameters()
         controlReleaseASmoother.getNextValue(),
         compressRatioASmoother.getNextValue(),
         controlThresholdASmoother.getNextValue());
-
-    //DBG("Attack: " << mappedAttack
-    //    << "  Release: " << mappedRelease
-    //    << "  Threshold: " << mappedThreshold
-    //    << "  Ratio: " << mappedRatio
-    //    << "  Input gain: " << inputGainDb);
-
 }
 
 void GuideLinesCompAudioProcessor::updateRMSLevels(const juce::AudioBuffer<float>& buffer,

@@ -19,14 +19,14 @@
 // Color Scheme
 namespace Colors
 {
-    const juce::Colour background{ 30, 30, 30 };            // charcoal gray
+    const juce::Colour background{ 10, 10, 10 };            // charcoal gray
     const juce::Colour header{ 50, 50, 50 };                // dark gray
 
     namespace Knob
     {
         const juce::Colour trackBackground{ 0, 0, 0 };             // black
         const juce::Colour outline{ 110, 40, 140 };                // regal purple
-        const juce::Colour gradientTop{ 60, 60, 60 };              // mid gray
+        const juce::Colour gradientTop{ 45, 45, 45 };              // mid gray
         const juce::Colour gradientBottom{ 30, 30, 30 };           // charcoal gray
         const juce::Colour dial{ 255, 255, 255 };                  // white
         const juce::Colour dropShadow{ 50, 50, 50 };               // dark gray
@@ -34,24 +34,24 @@ namespace Colors
         const juce::Colour textBoxBackground{ 45, 45, 45 };        // deep gray
         const juce::Colour value{ 255, 255, 255 };                 // white
         const juce::Colour caret{ 255, 255, 255 };                 // white
-        const juce::Colour tick{ 50, 200, 180 };                   // teal
+        const juce::Colour tick{ 40, 180, 160 };                   // teal
     }
 
     namespace Group
     {
-        const juce::Colour label{ 230, 120, 50 };                  // orange
+        const juce::Colour label{ 255, 140, 60 };                  // orange
         const juce::Colour outline{ 102, 51, 153 };                // plum
     }
 
     namespace LevelMeter
     {
-        const juce::Colour background{ 20, 20, 20 };               // near-black
+        const juce::Colour background{ 0, 0, 0 };               // near-black
         const juce::Colour tickLine{ 225, 225, 225 };              // light gray
         const juce::Colour tickLabel{ 230, 230, 230 };              // orange
         const juce::Colour tooLoud{ 226, 74, 81 };                 // red
         const juce::Colour peakLevelOK{ 50, 200, 180 };            // aqua green
         const juce::Colour rmsLevelOK{ 30, 120, 60 };              // forest green
-        const juce::Colour gainReduction{ 230, 120, 50 };          // orange
+        const juce::Colour gainReduction{ 255, 140, 60 };          // orange
 
     }
 
@@ -70,7 +70,7 @@ class Fonts
 {
 public:
     Fonts() = delete;
-    static juce::Font getFont(float height = 16.f);
+    static juce::Font getFont(float height = 14.f);
 
 private:
     static const juce::Typeface::Ptr typeface;
