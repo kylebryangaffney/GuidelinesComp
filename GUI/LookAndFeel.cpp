@@ -259,37 +259,59 @@ juce::Label* RotaryKnobLookAndFeel::createSliderTextBox(juce::Slider& slider)
 
 void LevelMeterLookAndFeel::drawLevelMeter(juce::Graphics& g, const LevelMeter& meter)
 {
-    const auto bounds = meter.getLocalBounds();
+    constexpr float borderThickness = 1.0f;
+    constexpr float borderRadius = 4.0f;
+
+    auto borderRect = meter.getLocalBounds().toFloat().reduced(borderThickness * 0.5f);
+    auto innerRect = borderRect.reduced(5.0f); // or whatever padding you want
+
     g.fillAll(Colors::LevelMeter::background);
+
+    g.setColour(Colors::LevelMeter::border);
+    g.drawRoundedRectangle(borderRect, borderRadius, borderThickness);
     g.setFont(Fonts::getFont(10.f));
 
-    // Draw peak and RMS meters for both left and right channels
-    drawPeakLevel(0, 4, meter.getWidth(), 7, g, meter.getPeakLevelL(),
+    // Bar settings
+    const int barHeight = 7;
+    const int rmsHeight = 4;
+    const int barSpacing = 2; // space between bars
+
+    // Calculate bar Y positions within 'inner'
+    int yPeakL = innerRect.getY();
+    int yPeakR = yPeakL + barHeight + barSpacing;
+    int yRmsL = yPeakL;
+    int yRmsR = yPeakR;
+
+    // Draw peak and RMS meters for both channels
+    drawPeakLevel(innerRect.getX(), yPeakL, innerRect.getWidth(), barHeight, g, meter.getPeakLevelL(),
+        [&](float db) { return meter.positionForLevel(db); });
+    drawPeakLevel(innerRect.getX(), yPeakR, innerRect.getWidth(), barHeight, g, meter.getPeakLevelR(),
         [&](float db) { return meter.positionForLevel(db); });
 
-    drawPeakLevel(0, 7, meter.getWidth(), 7, g, meter.getPeakLevelR(),
+    drawRmsLevel(innerRect.getX(), yRmsL, innerRect.getWidth(), rmsHeight, g, meter.getRmsLevelL(),
         [&](float db) { return meter.positionForLevel(db); });
-
-    drawRmsLevel(0, 4, meter.getWidth(), 4, g, meter.getRmsLevelL(),
-        [&](float db) { return meter.positionForLevel(db); });
-
-    drawRmsLevel(0, 7, meter.getWidth(), 4, g, meter.getRmsLevelR(),
+    drawRmsLevel(innerRect.getX(), yRmsR, innerRect.getWidth(), rmsHeight, g, meter.getRmsLevelR(),
         [&](float db) { return meter.positionForLevel(db); });
 
     // Draw dB tick marks with numeric labels
+    const int tickTop = innerRect.getY() + 2;           // 2 px down from top
+    const int tickHeight = 14;
+    const int labelTop = tickTop + tickHeight;        // below tick
+    const int labelHeight = 12;
+
     for (float db = meter.maxdB; db >= meter.mindB; db -= meter.stepdB)
     {
-        int x = meter.positionForLevel(db);
+        int x = innerRect.getX() + meter.positionForLevel(db);
         g.setColour(Colors::LevelMeter::tickLine);
-        g.fillRect(x, 0, 1, 14);
+        g.fillRect(x, tickTop, 1, tickHeight);
 
         g.setColour(Colors::LevelMeter::tickLabel);
         g.drawText(
             juce::String(int(db)),
-            x - 12,   // left (center label under tick)
-            15,       // top (just below tick)
-            24,       // width
-            12,       // height
+            x - 12,
+            labelTop,
+            24,
+            labelHeight,
             juce::Justification::centred
         );
     }
@@ -342,25 +364,44 @@ void LevelMeterLookAndFeel::drawRmsLevel(int x, int y, int width, int height,
 // GainReductionMeterLookAndFeel
 void GainReductionMeterLookAndFeel::drawGainReductionMeter(juce::Graphics& g, const GainReductionMeter& meter)
 {
-    const auto bounds = meter.getLocalBounds();
+    constexpr float borderThickness = 1.0f;
+    constexpr float borderRadius = 4.0f;
+
+    auto borderRect = meter.getLocalBounds().toFloat().reduced(borderThickness * 0.5f);
+    auto innerRect = borderRect.reduced(5.0f);
+
     g.fillAll(Colors::LevelMeter::background);
+
+    g.setColour(Colors::LevelMeter::border);
+    g.drawRoundedRectangle(borderRect, borderRadius, borderThickness);
     g.setFont(Fonts::getFont(10.f));
 
+
+    // Bar settings
+    const int barHeight = 7;
+    const int rmsHeight = 4;
     // Draw RMS bar, using same wrappers as LevelMeter
-    drawRmsLevel(0, 2, meter.getWidth(), 7, g, meter.getMaxRmsLevel(),
+    drawRmsLevel(innerRect.getX(), innerRect.getY(), innerRect.getWidth(), barHeight, g, meter.getMaxRmsLevel(),
         [&](float db) { return meter.positionForLevel(db); });
 
+
+    // Draw dB tick marks with numeric labels
+    const int tickTop = innerRect.getY() + 2;           // 2 px down from top
+    const int tickHeight = 14;
+    const int labelTop = tickTop + tickHeight;        // below tick
+    const int labelHeight = 12;
+
     // Draw vertical ticks and labels
-    for (float db = GainReductionMeter::maxdB; db >= GainReductionMeter::mindB; db -= GainReductionMeter::stepdB)
+    for (float db = GainReductionMeter::maxdB; db >= GainReductionMeter::mindB - 0.1f; db -= GainReductionMeter::stepdB)
     {
-        int x = meter.positionForLevel(db);
+        int x = innerRect.getX() + meter.positionForLevel(db);
         g.setColour(Colors::LevelMeter::tickLine);
-        g.fillRect(x, 0, 1, 10);
+        g.fillRect(x, tickTop, 1, tickHeight);
 
         g.setColour(Colors::LevelMeter::tickLabel);
         g.drawText(
             juce::String(int(db)),
-            x - 14, 12, 28, 12, juce::Justification::centred
+            x - 14, labelTop, 28, labelHeight, juce::Justification::centred
         );
     }
 }

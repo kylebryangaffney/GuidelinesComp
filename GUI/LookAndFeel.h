@@ -45,7 +45,8 @@ namespace Colors
 
     namespace LevelMeter
     {
-        const juce::Colour background{ 0, 0, 0 };               // near-black
+        const juce::Colour background{ 0, 0, 0 };               // black
+        const juce::Colour border{ 255, 255, 255 };
         const juce::Colour tickLine{ 225, 225, 225 };              // light gray
         const juce::Colour tickLabel{ 230, 230, 230 };              // orange
         const juce::Colour tooLoud{ 226, 74, 81 };                 // red
