@@ -389,7 +389,7 @@ void GainReductionMeterLookAndFeel::drawGainReductionMeter(juce::Graphics& g, co
 
     // Draw dB tick marks with numeric labels
     const int tickTop = innerRect.getY() + 2;           // 2 px down from top
-    const int tickHeight = 14;
+    const int tickHeight = 8;
     const int labelTop = tickTop + tickHeight;        // below tick
     const int labelHeight = 12;
 
@@ -403,7 +403,7 @@ void GainReductionMeterLookAndFeel::drawGainReductionMeter(juce::Graphics& g, co
         g.setColour(Colors::LevelMeter::tickLabel);
         g.drawText(
             juce::String(int(db)),
-            x - 14, labelTop, 28, labelHeight, juce::Justification::centred
+            x - 8, labelTop, 28, labelHeight, juce::Justification::centred
         );
     }
 }
@@ -425,7 +425,6 @@ void GainReductionMeterLookAndFeel::drawMeterBar(
         g.fillRect(xEnd, y, xRight - xEnd, height);
     }
 }
-
 
 // Wrapper for drawing left/right RMS levels
 void GainReductionMeterLookAndFeel::drawRmsLevel(

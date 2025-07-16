@@ -38,7 +38,7 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     outputGroup.addAndMakeVisible(outputMeter);
     addAndMakeVisible(outputGroup);
 
-    setSize(400, 600);
+    setSize(400, 553);
     startTimerHz(60);
 }
 
@@ -64,11 +64,11 @@ void GuideLinesCompAudioProcessorEditor::resized()
     int headerHeight = 50;
     int presetPanelHeight = 40;
     int knobWidth = 57;
-    int padding = 10;
+    int padding = 7;
     int y = headerHeight + presetPanelHeight + padding;
 
     int groupWidth = bounds.getWidth() - 3 * padding;
-    int groupHeight = 120;
+    int groupHeight = 105;
     int meterWidth = groupWidth - knobWidth - (3 * padding);
     int meterHeight = 55;
 
