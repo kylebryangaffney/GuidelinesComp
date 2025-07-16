@@ -23,8 +23,8 @@ public:
     void paint(juce::Graphics&) override;
     void resized() override;
 
-    int positionForLevel(float dbLevel) const noexcept;
-
+    int positionForLevel(float dbLevel, float minX, float maxX) const noexcept;
+  
     float getMaxRmsLevel() const;
     static constexpr float maxdB = 0.0f;
     static constexpr float mindB = -60.0f;

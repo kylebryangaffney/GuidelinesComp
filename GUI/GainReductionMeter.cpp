@@ -46,10 +46,13 @@ void GainReductionMeter::resized()
     }
 }
 
-int GainReductionMeter::positionForLevel(float dbLevel) const noexcept
+int GainReductionMeter::positionForLevel(float dbLevel, float minX, float maxX) const noexcept
 {
-    return int(std::round(juce::jmap(dbLevel, mindB, maxdB, minPos, maxPos)));
+    return int(std::round(
+        juce::jmap(dbLevel, mindB, maxdB, minX, maxX)
+    ));
 }
+
 
 float GainReductionMeter::getMaxRmsLevel() const
 {

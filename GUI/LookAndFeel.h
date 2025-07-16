@@ -24,7 +24,7 @@ namespace Colors
 
     namespace Knob
     {
-        const juce::Colour trackBackground{ 0, 0, 0 };             // black
+        const juce::Colour trackBackground{ 40, 180, 160 };             // black
         const juce::Colour outline{ 110, 40, 140 };                // regal purple
         const juce::Colour gradientTop{ 45, 45, 45 };              // mid gray
         const juce::Colour gradientBottom{ 30, 30, 30 };           // charcoal gray

@@ -35,11 +35,7 @@ public:
     float getRmsLevelL() const { return dbRmsLevelL; }
     float getRmsLevelR() const { return dbRmsLevelR; }
 
-    
-    int positionForLevel(float dbLevel) const noexcept
-    {
-        return int(std::round(juce::jmap(dbLevel, mindB, maxdB, minPos, maxPos)));
-    }
+    int positionForLevel(float dbLevel, float minX, float maxX) const noexcept;
 
 
 private:

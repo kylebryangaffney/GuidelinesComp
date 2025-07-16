@@ -84,3 +84,11 @@ void LevelMeter::updateLevel(float newLevel, float& smoothedLevel, float& leveld
     else
         leveldB = clampdB;
 }
+
+
+int LevelMeter::positionForLevel(float dbLevel, float minX, float maxX) const noexcept
+{
+    return int(std::round(
+        juce::jmap(dbLevel, mindB, maxdB, minX, maxX)
+    ));
+}
