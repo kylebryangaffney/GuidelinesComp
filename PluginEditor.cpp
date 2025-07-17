@@ -9,6 +9,12 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+float getNormalizedAlertLevel(float value, float startThreshold, float endThreshold)
+{
+    return juce::jlimit(0.0f, 1.0f, (value - startThreshold) / (endThreshold - startThreshold));
+}
+
+
 //==============================================================================
 GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLinesCompAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p)
@@ -98,7 +104,12 @@ void GuideLinesCompAudioProcessorEditor::timerCallback()
     auto compress = audioProcessor.getCompressionAmountForKnob();
     auto output = audioProcessor.getPeakOutputLevelForKnob();
 
-    compressionKnob.setAlertLevel(juce::jlimit(0.f, 1.f, input));
+    compressionKnob.setAlertLevel(getNormalizedAlertLevel(input, 0.8f, 1.2f));
     controlKnob.setAlertLevel(juce::jlimit(0.f, 1.f, compress / 12));
-    outputGainKnob.setAlertLevel(juce::jlimit(0.f, 1.f, output));
+    outputGainKnob.setAlertLevel(getNormalizedAlertLevel(output, 0.8f, 1.2f));
+
+    //compressionKnob.setAlertLevel(juce::jlimit(0.0f, 1.0f, input));
+    //controlKnob.setAlertLevel(juce::jlimit(0.f, 1.f, compress / 12));
+    //outputGainKnob.setAlertLevel(juce::jlimit(0.0f, 1.0f, output));
+
 }

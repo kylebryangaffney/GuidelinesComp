@@ -386,7 +386,6 @@ void GainReductionMeterLookAndFeel::drawGainReductionMeter(juce::Graphics& g, co
     drawRmsLevel(innerRect.getX(), innerRect.getY(), innerRect.getWidth(), barHeight, g, meter.getMaxRmsLevel(),
         [&](float db) { return meter.positionForLevel(db, innerRect.getX(), innerRect.getRight()); });
 
-
     // Draw dB tick marks with numeric labels
     const int tickTop = innerRect.getY() + 2;           // 2 px down from top
     const int tickHeight = 8;

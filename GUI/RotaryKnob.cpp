@@ -52,6 +52,7 @@ void RotaryKnob::resized()
 void RotaryKnob::setAlertLevel(float newAlert)
 {
     alertLevel = newAlert;
+    slider.repaint();
 }
 
 float RotaryKnob::getAlertLevel() const
