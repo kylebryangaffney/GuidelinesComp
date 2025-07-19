@@ -17,9 +17,11 @@ float getNormalizedAlertLevel(float value, float startThreshold, float endThresh
 
 //==============================================================================
 GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLinesCompAudioProcessor& p)
-    : AudioProcessorEditor(&p), audioProcessor(p)
+    : AudioProcessorEditor(&p), audioProcessor(p), presetPanel(p.getPresetManager())
 {
     setLookAndFeel(&mainLF);
+
+    addAndMakeVisible(presetPanel);
 
     addAndMakeVisible(lowCutKnob);
 
@@ -44,7 +46,7 @@ GuideLinesCompAudioProcessorEditor::GuideLinesCompAudioProcessorEditor(GuideLine
     outputGroup.addAndMakeVisible(outputMeter);
     addAndMakeVisible(outputGroup);
 
-    setSize(400, 553);
+    setSize(400, 550);
     startTimerHz(60);
 }
 
@@ -77,6 +79,8 @@ void GuideLinesCompAudioProcessorEditor::resized()
     int groupHeight = 105;
     int meterWidth = groupWidth - knobWidth - (3 * padding);
     int meterHeight = 55;
+
+    presetPanel.setBounds(bounds.getX() + 10, headerHeight, bounds.getWidth() - 20, presetPanelHeight);
 
     lowCutKnob.setTopLeftPosition(padding, y + padding);
 

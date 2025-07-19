@@ -15,6 +15,7 @@
 #include "GUI/AsymmetricalRotaryKnob.h"
 #include "GUI/LevelMeter.h"
 #include "GUI/GainReductionMeter.h"
+#include "GUI/PresetPanel.h"
 
 //==============================================================================
 /**
@@ -33,11 +34,11 @@ public:
 private:
 
     MainLookAndFeel mainLF;
-
     GuideLinesCompAudioProcessor& audioProcessor;
+
     RotaryKnob lowCutKnob{ "Lo Cut", audioProcessor.apvts, lowCutParamID };
-    RotaryKnob compressionKnob{ "Strength", audioProcessor.apvts, compressionParamID }; // Strength
-    RotaryKnob controlKnob{ "Shape", audioProcessor.apvts, controlParamID }; // Shape
+    RotaryKnob compressionKnob{ "Compress", audioProcessor.apvts, compressionParamID }; // Strength
+    RotaryKnob controlKnob{ "Control", audioProcessor.apvts, controlParamID }; // Shape
     AsymmetricalRotaryKnob outputGainKnob{ "Out", audioProcessor.apvts, outputGainParamID };
 
     LevelMeter inputMeter{
@@ -54,6 +55,8 @@ private:
     juce::GroupComponent compressGroup;
     juce::GroupComponent controlGroup;
     juce::GroupComponent outputGroup;
+
+    Gui::PresetPanel presetPanel;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuideLinesCompAudioProcessorEditor)
 };

@@ -13,6 +13,7 @@
 
 #include "Service/Parameters.h"
 #include "Service/ProtectYourEars.h"
+#include "Service/PresetManager.h"
 #include "DSP/CompressorUnit.h"
 #include "DSP/OptoCompressorUnit.h"
 #include "Service/Measurement.h"
@@ -86,9 +87,11 @@ public:
     float getPeakInputLevelForKnob() const noexcept { return peakInputLevelForKnob.load(); }
     float getCompressionAmountForKnob() const noexcept { return compressionAmountForKnob.load(); }
     float getPeakOutputLevelForKnob() const noexcept { return peakOutputLevelForKnob.load(); }
+    Service::PresetManager& getPresetManager() { return *presetManager; }
 
 private:
 
+    std::unique_ptr<Service::PresetManager> presetManager;
     juce::dsp::StateVariableTPTFilter<float> lowCutFilter;
     float lastLowCut = -1.f;
 

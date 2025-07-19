@@ -19,6 +19,10 @@ GuideLinesCompAudioProcessor::GuideLinesCompAudioProcessor() : AudioProcessor(
 params(apvts)
 {
     lowCutFilter.setType(juce::dsp::StateVariableTPTFilterType::highpass);
+    apvts.state.setProperty(Service::PresetManager::presetNameProperty, "", nullptr);
+    apvts.state.setProperty("version", ProjectInfo::versionString, nullptr);
+
+    presetManager = std::make_unique<Service::PresetManager>(apvts);
 }
 
 GuideLinesCompAudioProcessor::~GuideLinesCompAudioProcessor()
@@ -305,7 +309,6 @@ void GuideLinesCompAudioProcessor::updateBypassState()
 {
     if (params.bypassed && bypassFade >= 1.0f)
         return;
-
     if (params.bypassed && bypassFade < 1.0f)
         bypassFade += bypassFadeInc;
     else if (!params.bypassed && bypassFade > 0.0f)
