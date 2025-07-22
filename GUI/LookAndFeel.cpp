@@ -28,6 +28,77 @@ juce::Font Fonts::getFont(float height)
         .withHeight(height);
 }
 
+//================================================================================
+// PresetPanelLookAndFeel
+
+PresetPanelLookAndFeel::PresetPanelLookAndFeel()
+{
+    setColour(juce::ComboBox::backgroundColourId, Colors::PresetPanel::boxBackground);
+    setColour(juce::ComboBox::outlineColourId, Colors::PresetPanel::outline);
+    setColour(juce::ComboBox::textColourId, Colors::PresetPanel::text);
+
+    setColour(juce::TextButton::buttonColourId, Colors::PresetPanel::buttonBase);
+    setColour(juce::TextButton::textColourOnId, Colors::PresetPanel::text);
+    setColour(juce::TextButton::textColourOffId, Colors::PresetPanel::text);
+}
+
+void PresetPanelLookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& b, const juce::Colour& backgroundColor,
+    bool isMouseOverButton, bool isButtonDown)
+{
+    auto bounds = b.getLocalBounds().toFloat();
+    float corner = 4.0f;
+
+    // Draw the main background
+    g.setColour(b.findColour(juce::TextButton::buttonColourId));
+    g.fillRoundedRectangle(bounds, corner);
+
+    // Draw hover/pressed overlay (semi-transparent)
+    if (isButtonDown)
+    {
+        g.setColour(Colors::PresetPanel::buttonDown.withAlpha(0.4f));
+        g.fillRoundedRectangle(bounds, corner);
+    }
+    else if (isMouseOverButton)
+    {
+        g.setColour(Colors::PresetPanel::buttonHover.withAlpha(0.3f));
+        g.fillRoundedRectangle(bounds, corner);
+    }
+
+    g.setColour(Colors::PresetPanel::outline);
+    g.drawRoundedRectangle(bounds, corner, 1.5f);
+}
+
+void PresetPanelLookAndFeel::drawButtonText(juce::Graphics& g,
+    juce::TextButton& b,
+    bool isMouseOverButton, bool isButtonDown)
+{
+    g.setColour(b.findColour(juce::TextButton::textColourOnId));
+    g.setFont(12.0f);
+    g.drawFittedText(b.getButtonText(), b.getLocalBounds(), juce::Justification::centred, 1);
+
+}
+
+void PresetPanelLookAndFeel::drawComboBox(juce::Graphics& g,
+    int width, int height, bool isButtonDown,
+    int buttonX, int buttonY, int buttonW, int buttonH,
+    juce::ComboBox& box)
+{
+    auto cornerSize = 4.0f;
+    juce::Rectangle<int> boxBounds(0, 0, width, height);
+
+    g.setColour(box.findColour(juce::ComboBox::backgroundColourId));
+    g.fillRoundedRectangle(boxBounds.toFloat(), cornerSize);
+
+    g.setColour(Colors::PresetPanel::outline);
+    g.drawRoundedRectangle(boxBounds.toFloat(), cornerSize, 1.5f);
+}
+
+void PresetPanelLookAndFeel::drawPresetPanelBackground(juce::Graphics& g, juce::Rectangle<int> area)
+{
+    g.setColour(Colors::PresetPanel::background);
+    g.fillRoundedRectangle(area.toFloat(), 7.0f);
+}
+
 //==============================================================================
 // RotaryKnobLookAndFeel
 

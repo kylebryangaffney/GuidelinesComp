@@ -14,6 +14,7 @@
 #include "RotaryKnob.h"
 #include "LevelMeter.h"
 #include "GainReductionMeter.h"
+#include "PresetPanel.h"
 
 //==============================================================================
 // Color Scheme
@@ -41,6 +42,17 @@ namespace Colors
     {
         const juce::Colour label{ 255, 140, 60 };                  // orange
         const juce::Colour outline{ 102, 51, 153 };                // plum
+    }
+
+    namespace PresetPanel
+    {
+        const juce::Colour outline{ 255, 255, 255};                // regal purple
+        const juce::Colour background{ 45, 45, 45 };        // deep gray
+        const juce::Colour boxBackground{ 80, 80, 80 };
+        const juce::Colour buttonBase{ 160, 70, 220 };
+        const juce::Colour buttonHover{ 255, 140, 60 };
+        const juce::Colour buttonDown{ 226, 74, 81 };                 // red
+        const juce::Colour text{255, 255, 255};
     }
 
     namespace LevelMeter
@@ -75,6 +87,33 @@ public:
 
 private:
     static const juce::Typeface::Ptr typeface;
+};
+
+class PresetPanelLookAndFeel : public juce::LookAndFeel_V4
+{
+public:
+    PresetPanelLookAndFeel();
+
+    void drawButtonBackground(juce::Graphics& g, juce::Button& b, const juce::Colour& backgroundColor,
+        bool isMouseOverButton, bool isButtonDown) override;
+    
+    void drawButtonText(juce::Graphics& g,
+        juce::TextButton& b,
+        bool isMouseOverButton, bool isButtonDown) override;
+
+    void drawComboBox(juce::Graphics& g,
+        int width, int height, bool isButtonDown,
+        int buttonX, int buttonY, int buttonW, int buttonH,
+        juce::ComboBox& box) override;
+
+    void drawPresetPanelBackground(juce::Graphics& g, juce::Rectangle<int> area);
+    
+
+private:
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PresetPanelLookAndFeel)
+
+
 };
 
 //==============================================================================
