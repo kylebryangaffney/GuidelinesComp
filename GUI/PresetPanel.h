@@ -1,4 +1,4 @@
-/*
+﻿/*
   ==============================================================================
 
     PresetPanel.h
@@ -9,7 +9,6 @@
 */
 
 #pragma once
-
 
 #include <JuceHeader.h>
 #include "../Service/PresetManager.h"

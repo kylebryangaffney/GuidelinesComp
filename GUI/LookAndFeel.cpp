@@ -40,6 +40,7 @@ PresetPanelLookAndFeel::PresetPanelLookAndFeel()
     setColour(juce::TextButton::buttonColourId, Colors::PresetPanel::buttonBase);
     setColour(juce::TextButton::textColourOnId, Colors::PresetPanel::text);
     setColour(juce::TextButton::textColourOffId, Colors::PresetPanel::text);
+
 }
 
 void PresetPanelLookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& b, const juce::Colour& backgroundColor,
@@ -72,11 +73,21 @@ void PresetPanelLookAndFeel::drawButtonText(juce::Graphics& g,
     juce::TextButton& b,
     bool isMouseOverButton, bool isButtonDown)
 {
-    g.setColour(b.findColour(juce::TextButton::textColourOnId));
-    g.setFont(12.0f);
-    g.drawFittedText(b.getButtonText(), b.getLocalBounds(), juce::Justification::centred, 1);
+    juce::String text = b.getButtonText();
+    juce::Colour color;
 
+    if (text.containsChar(L'\u2714'))
+        color = Colors::PresetPanel::saveGreen;
+    else if (text.containsChar(L'\u2716'))
+        color = Colors::PresetPanel::deleteRed;
+    else
+        color = Colors::PresetPanel::text;
+
+    g.setColour(color);
+    g.setFont(12.0f);
+    g.drawFittedText(text, b.getLocalBounds(), juce::Justification::centred, 1);
 }
+
 
 void PresetPanelLookAndFeel::drawComboBox(juce::Graphics& g,
     int width, int height, bool isButtonDown,

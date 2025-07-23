@@ -20,8 +20,8 @@
 // Color Scheme
 namespace Colors
 {
-    const juce::Colour background{ 10, 10, 10 };            // charcoal gray
-    const juce::Colour header{ 50, 50, 50 };                // dark gray
+    const juce::Colour background{ 10, 10, 10 };            
+    const juce::Colour header{ 50, 50, 50 };                
 
     namespace Knob
     {
@@ -46,14 +46,18 @@ namespace Colors
 
     namespace PresetPanel
     {
-        const juce::Colour outline{ 255, 255, 255};                // regal purple
-        const juce::Colour background{ 45, 45, 45 };        // deep gray
-        const juce::Colour boxBackground{ 80, 80, 80 };
-        const juce::Colour buttonBase{ 160, 70, 220 };
-        const juce::Colour buttonHover{ 255, 140, 60 };
-        const juce::Colour buttonDown{ 226, 74, 81 };                 // red
-        const juce::Colour text{255, 255, 255};
+        const juce::Colour outline{ 70,  70,  70 };  // or (60, 60, 60)
+        const juce::Colour background{ 44,  46,  50 };  // deep gray, almost black
+        const juce::Colour boxBackground{ 56,  58,  62 };  // muted dark gray
+        const juce::Colour buttonBase{ 64,  82, 108 };  // slate blue-gray
+        const juce::Colour buttonHover{ 96, 120, 156 };  // muted blue, gentle highlight
+        const juce::Colour buttonDown{ 46,  56,  76 };  // darker blue, low saturation
+        const juce::Colour text{ 230, 232, 235 }; // soft light gray
+        const juce::Colour saveGreen{ 64, 180, 144 };  // calm green, readable on dark
+        const juce::Colour deleteRed{ 170, 60, 60 };
+
     }
+
 
     namespace LevelMeter
     {
@@ -79,6 +83,8 @@ namespace Colors
 //==============================================================================
 // Font Style
 
+
+
 class Fonts
 {
 public:
@@ -89,10 +95,19 @@ private:
     static const juce::Typeface::Ptr typeface;
 };
 
+//==================================
+// PresetPanel
+
 class PresetPanelLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
     PresetPanelLookAndFeel();
+
+    static PresetPanelLookAndFeel* get()
+    {
+        static PresetPanelLookAndFeel instance;
+        return &instance;
+    }
 
     void drawButtonBackground(juce::Graphics& g, juce::Button& b, const juce::Colour& backgroundColor,
         bool isMouseOverButton, bool isButtonDown) override;
@@ -112,7 +127,6 @@ public:
 private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PresetPanelLookAndFeel)
-
 
 };
 

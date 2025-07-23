@@ -1,4 +1,4 @@
-/*
+﻿/*
   ==============================================================================
 
     PresetPanel.cpp
@@ -9,6 +9,7 @@
 */
 
 #include "PresetPanel.h"
+#include "LookAndFeel.h"
 
 namespace Gui
 {
@@ -16,10 +17,10 @@ namespace Gui
     PresetPanel::PresetPanel(Service::PresetManager& pm)
         : presetManager(pm)
     {
-        configureButton(saveButton, "Save");
-        configureButton(deleteButton, "Delete");
-        configureButton(previousPresetButton, "<");
-        configureButton(nextPresetButton, ">");
+        configureButton(saveButton, u8"\u2714");
+        configureButton(deleteButton, u8"\u2716");
+        configureButton(previousPresetButton, u8"\u25C0");
+        configureButton(nextPresetButton, u8"\u25B6");
 
         presetList.setTextWhenNothingSelected("No Preset Selected");
         presetList.setMouseCursor(juce::MouseCursor::PointingHandCursor);
@@ -27,6 +28,7 @@ namespace Gui
         presetList.addListener(this);
 
         loadPresetList();
+        setLookAndFeel(PresetPanelLookAndFeel::get());
     }
 
     PresetPanel::~PresetPanel()
