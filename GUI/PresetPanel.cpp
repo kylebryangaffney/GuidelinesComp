@@ -17,8 +17,15 @@ namespace Gui
     PresetPanel::PresetPanel(Service::PresetManager& pm)
         : presetManager(pm)
     {
-        configureButton(saveButton, u8"\u2714");
-        configureButton(deleteButton, u8"\u2716");
+
+        saveButton = std::make_unique<CheckmarkButton>();
+        addAndMakeVisible(*saveButton);
+        saveButton->addListener(this);
+
+        deleteButton = std::make_unique<XButton>();
+        addAndMakeVisible(*deleteButton);
+        deleteButton->addListener(this);
+
         configureButton(previousPresetButton, u8"\u25C0");
         configureButton(nextPresetButton, u8"\u25B6");
 
@@ -33,8 +40,8 @@ namespace Gui
 
     PresetPanel::~PresetPanel()
     {
-        saveButton.removeListener(this);
-        deleteButton.removeListener(this);
+        saveButton->removeListener(this);
+        deleteButton->removeListener(this);
         previousPresetButton.removeListener(this);
         nextPresetButton.removeListener(this);
         presetList.removeListener(this);
@@ -45,11 +52,11 @@ namespace Gui
         const auto container = getLocalBounds().reduced(4);
         auto bounds = container;
 
-        saveButton.setBounds(bounds.removeFromLeft(container.proportionOfWidth(0.2f)).reduced(4));
+        saveButton->setBounds(bounds.removeFromLeft(container.proportionOfWidth(0.2f)).reduced(4));
         previousPresetButton.setBounds(bounds.removeFromLeft(container.proportionOfWidth(0.1f)).reduced(4));
         presetList.setBounds(bounds.removeFromLeft(container.proportionOfWidth(0.4f)).reduced(4));
         nextPresetButton.setBounds(bounds.removeFromLeft(container.proportionOfWidth(0.1f)).reduced(4));
-        deleteButton.setBounds(bounds.reduced(4));
+        deleteButton->setBounds(bounds.reduced(4));
     }
 
     void PresetPanel::loadPresetList()
@@ -65,7 +72,7 @@ namespace Gui
 
     void PresetPanel::buttonClicked(juce::Button* button)
     {
-        if (button == &saveButton)
+        if (button == saveButton.get())
         {
             fileChooser = std::make_unique<juce::FileChooser>(
                 "Please enter the name of the preset to save",
@@ -90,7 +97,7 @@ namespace Gui
             const int index = presetManager.loadNextPreset();
             presetList.setSelectedItemIndex(index, false);
         }
-        else if (button == &deleteButton)
+        else if (button == deleteButton.get())
         {
             presetManager.deletePreset(presetManager.getCurrentPreset());
             loadPresetList();

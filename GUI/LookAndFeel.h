@@ -84,7 +84,6 @@ namespace Colors
 // Font Style
 
 
-
 class Fonts
 {
 public:
@@ -94,6 +93,7 @@ public:
 private:
     static const juce::Typeface::Ptr typeface;
 };
+
 
 //==================================
 // PresetPanel
@@ -115,6 +115,7 @@ public:
     void drawButtonText(juce::Graphics& g,
         juce::TextButton& b,
         bool isMouseOverButton, bool isButtonDown) override;
+
 
     void drawComboBox(juce::Graphics& g,
         int width, int height, bool isButtonDown,

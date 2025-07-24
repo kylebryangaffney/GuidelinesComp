@@ -12,6 +12,8 @@
 
 #include <JuceHeader.h>
 #include "../Service/PresetManager.h"
+#include "CheckmarkButton.h"
+#include "XButton.h"
 
 namespace Gui
 {
@@ -31,7 +33,9 @@ namespace Gui
         void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
         void configureButton(juce::Button& button, const juce::String& buttonText);
 
-        juce::TextButton saveButton, deleteButton, previousPresetButton, nextPresetButton;
+        std::unique_ptr<CheckmarkButton> saveButton;
+        std::unique_ptr<XButton> deleteButton;
+        juce::TextButton previousPresetButton, nextPresetButton;
         juce::ComboBox presetList;
 
         Service::PresetManager& presetManager;
