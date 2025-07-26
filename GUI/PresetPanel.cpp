@@ -46,18 +46,33 @@ namespace Gui
         nextPresetButton.removeListener(this);
         presetList.removeListener(this);
     }
-
     void PresetPanel::resized()
     {
-        const auto container = getLocalBounds().reduced(4);
-        auto bounds = container;
+        const int reduce = 4;
+        auto area = getLocalBounds().reduced(reduce);
 
-        saveButton->setBounds(bounds.removeFromLeft(container.proportionOfWidth(0.2f)).reduced(4));
-        previousPresetButton.setBounds(bounds.removeFromLeft(container.proportionOfWidth(0.1f)).reduced(4));
-        presetList.setBounds(bounds.removeFromLeft(container.proportionOfWidth(0.4f)).reduced(4));
-        nextPresetButton.setBounds(bounds.removeFromLeft(container.proportionOfWidth(0.1f)).reduced(4));
-        deleteButton->setBounds(bounds.reduced(4));
+        // Split into two rows: button row and list row
+        const int buttonRowHeight = area.getHeight() / 2;
+        auto buttonRow = area.removeFromTop(buttonRowHeight);
+        auto listRow = area;
+
+        // Divide button row into 4 equal parts
+        const int buttonWidth = buttonRow.getWidth() / 4;
+
+        auto prevBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
+        auto nextBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
+        auto saveBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
+        auto deleteBounds = buttonRow.reduced(reduce);
+
+        // Assign bounds
+        previousPresetButton.setBounds(prevBounds);
+        nextPresetButton.setBounds(nextBounds);
+        saveButton->setBounds(saveBounds);
+        deleteButton->setBounds(deleteBounds);
+        presetList.setBounds(listRow.reduced(reduce));
     }
+
+
 
     void PresetPanel::loadPresetList()
     {

@@ -70,19 +70,18 @@ void GuideLinesCompAudioProcessorEditor::resized()
     auto bounds = getLocalBounds();
 
     int headerHeight = 50;
-    int presetPanelHeight = 40;
     int knobWidth = 57;
     int padding = 7;
-    int y = headerHeight + presetPanelHeight + padding;
+    int y = headerHeight + padding;
 
     int groupWidth = bounds.getWidth() - 3 * padding;
     int groupHeight = 105;
     int meterWidth = groupWidth - knobWidth - (3 * padding);
     int meterHeight = 55;
 
-    presetPanel.setBounds(bounds.getX() + 10, headerHeight, bounds.getWidth() - 20, presetPanelHeight);
-
     lowCutKnob.setTopLeftPosition(padding, y + padding);
+
+    presetPanel.setBounds(lowCutKnob.getRight() + (groupWidth / 2), lowCutKnob.getY(), groupWidth / 3, groupHeight / 2);
 
     compressGroup.setBounds(padding, lowCutKnob.getBottom() + padding, groupWidth, groupHeight);
     controlGroup.setBounds(padding, compressGroup.getBottom() + padding, groupWidth, groupHeight);
