@@ -12,7 +12,7 @@
 
 #include <JuceHeader.h>
 
-class XButton : public juce::TextButton
+class XButton : public juce::Button
 {
 public:
     XButton();

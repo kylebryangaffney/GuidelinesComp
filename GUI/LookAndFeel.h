@@ -49,6 +49,8 @@ namespace Colors
         const juce::Colour outline{ 70,  70,  70 };  // or (60, 60, 60)
         const juce::Colour background{ 44,  46,  50 };  // deep gray, almost black
         const juce::Colour boxBackground{ 56,  58,  62 };  // muted dark gray
+        const juce::Colour saveButton{ 80, 130, 110 };   // muted grey-green
+        const juce::Colour deleteButton{ 130,  60,  60 };   // muted grey-red
         const juce::Colour buttonBase{ 64,  82, 108 };  // slate blue-gray
         const juce::Colour buttonHover{ 96, 120, 156 };  // muted blue, gentle highlight
         const juce::Colour buttonDown{ 46,  56,  76 };  // darker blue, low saturation

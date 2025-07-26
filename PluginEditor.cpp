@@ -81,7 +81,7 @@ void GuideLinesCompAudioProcessorEditor::resized()
 
     lowCutKnob.setTopLeftPosition(padding, y + padding);
 
-    presetPanel.setBounds(lowCutKnob.getRight() + (groupWidth / 2), lowCutKnob.getY(), groupWidth / 3, groupHeight / 2);
+    presetPanel.setBounds(lowCutKnob.getRight() + (groupWidth / 2), lowCutKnob.getY(), groupWidth / 3, groupHeight / 1.5);
 
     compressGroup.setBounds(padding, lowCutKnob.getBottom() + padding, groupWidth, groupHeight);
     controlGroup.setBounds(padding, compressGroup.getBottom() + padding, groupWidth, groupHeight);

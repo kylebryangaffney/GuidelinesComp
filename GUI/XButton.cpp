@@ -9,12 +9,13 @@
 */
 
 #include "XButton.h"
-#include "LookAndFeel.h"  // Adjust as needed
+#include "LookAndFeel.h"  
 
-XButton::XButton()
+XButton::XButton() : Button(u8"\u2716")
 {
-    setButtonText(u8"\u2716"); // Unicode X
+    setButtonText({}); 
     setMouseCursor(juce::MouseCursor::PointingHandCursor);
+    setLookAndFeel(nullptr);
 }
 
 void XButton::paintButton(juce::Graphics& g, bool isHighlighted, bool isDown)
@@ -39,7 +40,7 @@ void XButton::paintButton(juce::Graphics& g, bool isHighlighted, bool isDown)
 
     // Set unique color for X
     g.setColour(Colors::PresetPanel::deleteRed);
-    g.setFont(12.0f);
-    g.drawFittedText(getButtonText(), getLocalBounds(), juce::Justification::centred, 1);
+    g.setFont(12.0f); // Adjust size as needed
+    g.drawFittedText(u8"\u2716", getLocalBounds(), juce::Justification::centred, 1);
 
 }

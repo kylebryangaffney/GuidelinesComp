@@ -29,7 +29,7 @@ namespace Gui
         configureButton(previousPresetButton, u8"\u25C0");
         configureButton(nextPresetButton, u8"\u25B6");
 
-        presetList.setTextWhenNothingSelected("No Preset Selected");
+        presetList.setTextWhenNothingSelected("Select Preset");
         presetList.setMouseCursor(juce::MouseCursor::PointingHandCursor);
         addAndMakeVisible(presetList);
         presetList.addListener(this);
@@ -49,20 +49,20 @@ namespace Gui
     void PresetPanel::resized()
     {
         const int reduce = 4;
-        auto area = getLocalBounds().reduced(reduce);
+        juce::Rectangle<int> area = getLocalBounds().reduced(reduce);
 
         // Split into two rows: button row and list row
         const int buttonRowHeight = area.getHeight() / 2;
-        auto buttonRow = area.removeFromTop(buttonRowHeight);
-        auto listRow = area;
+        juce::Rectangle<int> buttonRow = area.removeFromTop(buttonRowHeight);
+        juce::Rectangle<int> listRow = area;
 
         // Divide button row into 4 equal parts
         const int buttonWidth = buttonRow.getWidth() / 4;
 
-        auto prevBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
-        auto nextBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
-        auto saveBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
-        auto deleteBounds = buttonRow.reduced(reduce);
+        juce::Rectangle<int> prevBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
+        juce::Rectangle<int> nextBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
+        juce::Rectangle<int> saveBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
+        juce::Rectangle<int> deleteBounds = buttonRow.reduced(reduce);
 
         // Assign bounds
         previousPresetButton.setBounds(prevBounds);
@@ -71,8 +71,6 @@ namespace Gui
         deleteButton->setBounds(deleteBounds);
         presetList.setBounds(listRow.reduced(reduce));
     }
-
-
 
     void PresetPanel::loadPresetList()
     {

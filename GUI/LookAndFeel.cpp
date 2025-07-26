@@ -73,13 +73,20 @@ void PresetPanelLookAndFeel::drawButtonText(juce::Graphics& g,
     juce::TextButton& b,
     bool isMouseOverButton, bool isButtonDown)
 {
-    if (b.getButtonText() == juce::String::charToString(0x2714) || // Checkmark
-        b.getButtonText() == juce::String::charToString(0x2716))   // X
+    juce::Colour buttonColor = b.findColour(b.getToggleState() ? juce::TextButton::textColourOnId
+        : juce::TextButton::textColourOffId);
+
+    // Check if the button is an XButton
+    if (dynamic_cast<XButton*>(&b) != nullptr)
     {
-        return;
+        g.setColour(Colors::PresetPanel::deleteRed);
+    }
+    else
+    {
+        g.setColour(buttonColor);
     }
 
-    LookAndFeel_V4::drawButtonText(g, b, false, false);
+    g.drawFittedText(b.getButtonText(), b.getLocalBounds(), juce::Justification::centred, 1);
 }
 
 
