@@ -7,28 +7,34 @@
 
   ==============================================================================
 */
-
 #include "PresetPanel.h"
 #include "LookAndFeel.h"
 
 namespace Gui
 {
 
+    //==============================================================================
     PresetPanel::PresetPanel(Service::PresetManager& pm)
         : presetManager(pm)
     {
+        // Action button with gear drawable
+        actionButton = std::make_unique<juce::DrawableButton>(
+            "ActionButton", juce::DrawableButton::ImageOnButtonBackground);
 
-        saveButton = std::make_unique<CheckmarkButton>();
-        addAndMakeVisible(*saveButton);
-        saveButton->addListener(this);
+        std::unique_ptr<juce::Drawable> defaultDrawable = juce::Drawable::createFromImageData(
+            BinaryData::gearDefault_svg, BinaryData::gearDefault_svgSize);
+        std::unique_ptr<juce::Drawable> hoverDrawable = juce::Drawable::createFromImageData(
+            BinaryData::gearHover_svg, BinaryData::gearHover_svgSize);
+        std::unique_ptr<juce::Drawable> pressedDrawable = juce::Drawable::createFromImageData(
+            BinaryData::gearPressed_svg, BinaryData::gearPressed_svgSize);
 
-        deleteButton = std::make_unique<XButton>();
-        addAndMakeVisible(*deleteButton);
-        deleteButton->addListener(this);
+        actionButton->setImages(defaultDrawable.get(), hoverDrawable.get(), pressedDrawable.get(),
+            nullptr, nullptr);
 
-        configureButton(previousPresetButton, u8"\u25C0");
-        configureButton(nextPresetButton, u8"\u25B6");
+        addAndMakeVisible(*actionButton);
+        actionButton->addListener(this);
 
+        // Preset list
         presetList.setTextWhenNothingSelected("Select Preset");
         presetList.setMouseCursor(juce::MouseCursor::PointingHandCursor);
         addAndMakeVisible(presetList);
@@ -40,35 +46,31 @@ namespace Gui
 
     PresetPanel::~PresetPanel()
     {
-        saveButton->removeListener(this);
-        deleteButton->removeListener(this);
+        actionButton->removeListener(this);
         previousPresetButton.removeListener(this);
         nextPresetButton.removeListener(this);
         presetList.removeListener(this);
     }
+
+    //==============================================================================
     void PresetPanel::resized()
     {
         const int reduce = 4;
-        juce::Rectangle<int> area = getLocalBounds().reduced(reduce);
+        auto area = getLocalBounds().reduced(reduce);
 
-        // Split into two rows: button row and list row
         const int buttonRowHeight = area.getHeight() / 2;
-        juce::Rectangle<int> buttonRow = area.removeFromTop(buttonRowHeight);
-        juce::Rectangle<int> listRow = area;
+        auto buttonRow = area.removeFromTop(buttonRowHeight);
+        auto listRow = area;
 
-        // Divide button row into 4 equal parts
         const int buttonWidth = buttonRow.getWidth() / 4;
 
-        juce::Rectangle<int> prevBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
-        juce::Rectangle<int> nextBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
-        juce::Rectangle<int> saveBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
-        juce::Rectangle<int> deleteBounds = buttonRow.reduced(reduce);
+        auto prevBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
+        auto nextBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
+        auto actionBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
 
-        // Assign bounds
         previousPresetButton.setBounds(prevBounds);
         nextPresetButton.setBounds(nextBounds);
-        saveButton->setBounds(saveBounds);
-        deleteButton->setBounds(deleteBounds);
+        actionButton->setBounds(actionBounds);
         presetList.setBounds(listRow.reduced(reduce));
     }
 
@@ -83,21 +85,25 @@ namespace Gui
         presetList.setSelectedItemIndex(allPresets.indexOf(currentPreset), false);
     }
 
+    //==============================================================================
+    // Event Handlers
+
     void PresetPanel::buttonClicked(juce::Button* button)
     {
-        if (button == saveButton.get())
+        if (button == actionButton.get())
         {
-            fileChooser = std::make_unique<juce::FileChooser>(
-                "Please enter the name of the preset to save",
-                Service::PresetManager::defaultDirectory,
-                "*." + Service::PresetManager::extension
-            );
+            juce::PopupMenu menu;
+            menu.addItem(1, "Save New");
+            menu.addItem(2, "Overwrite Current");
+            menu.addItem(3, "Delete");
 
-            fileChooser->launchAsync(juce::FileBrowserComponent::saveMode, [&](const juce::FileChooser& chooser)
+            auto safeThis = juce::Component::SafePointer<PresetPanel>(this);
+
+            menu.showMenuAsync(
+                juce::PopupMenu::Options().withTargetComponent(*actionButton),
+                [safeThis](int result)
                 {
-                    const auto resultFile = chooser.getResult();
-                    presetManager.savePreset(resultFile.getFileNameWithoutExtension());
-                    loadPresetList();
+                    PresetPanel::popupMenuCallback(result, safeThis);
                 });
         }
         else if (button == &previousPresetButton)
@@ -110,11 +116,6 @@ namespace Gui
             const int index = presetManager.loadNextPreset();
             presetList.setSelectedItemIndex(index, false);
         }
-        else if (button == deleteButton.get())
-        {
-            presetManager.deletePreset(presetManager.getCurrentPreset());
-            loadPresetList();
-        }
     }
 
     void PresetPanel::comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged)
@@ -124,6 +125,77 @@ namespace Gui
             presetManager.loadPreset(presetList.getItemText(presetList.getSelectedItemIndex()));
         }
     }
+
+    //==============================================================================
+    // Action Menu
+
+    void PresetPanel::handleActionMenuResult(int result)
+    {
+        switch (result)
+        {
+        case 1: // Save New
+        {
+            fileChooser = std::make_unique<juce::FileChooser>(
+                "Enter preset name to save",
+                Service::PresetManager::defaultDirectory,
+                "*." + Service::PresetManager::extension);
+
+            auto safeThis = juce::Component::SafePointer<PresetPanel>(this);
+
+            fileChooser->launchAsync(
+                juce::FileBrowserComponent::saveMode,
+                [safeThis](const juce::FileChooser& chooser)
+                {
+                    PresetPanel::fileChooserCallback(chooser, safeThis);
+                });
+            break;
+        }
+        case 2: // Overwrite
+        {
+            presetManager.savePreset(presetManager.getCurrentPreset());
+            loadPresetList();
+            break;
+        }
+        case 3: // Delete
+        {
+            presetManager.deletePreset(presetManager.getCurrentPreset());
+            loadPresetList();
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    void PresetPanel::popupMenuCallback(int result,
+        juce::Component::SafePointer<PresetPanel> safePanel)
+    {
+        if (safePanel != nullptr)
+            safePanel->handleActionMenuResult(result);
+    }
+
+    //==============================================================================
+    // File Chooser
+
+    void PresetPanel::fileChooserCallback(const juce::FileChooser& chooser,
+        juce::Component::SafePointer<PresetPanel> safePanel)
+    {
+        if (safePanel != nullptr)
+            safePanel->handleFileChooserResult(chooser);
+    }
+
+    void PresetPanel::handleFileChooserResult(const juce::FileChooser& chooser)
+    {
+        auto resultFile = chooser.getResult();
+        if (resultFile.existsAsFile() || resultFile.getParentDirectory().isDirectory())
+        {
+            presetManager.savePreset(resultFile.getFileNameWithoutExtension());
+            loadPresetList();
+        }
+    }
+
+    //==============================================================================
+    // Helpers
 
     void PresetPanel::configureButton(juce::Button& button, const juce::String& buttonText)
     {

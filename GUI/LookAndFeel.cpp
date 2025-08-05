@@ -76,15 +76,7 @@ void PresetPanelLookAndFeel::drawButtonText(juce::Graphics& g,
     juce::Colour buttonColor = b.findColour(b.getToggleState() ? juce::TextButton::textColourOnId
         : juce::TextButton::textColourOffId);
 
-    // Check if the button is an XButton
-    if (dynamic_cast<XButton*>(&b) != nullptr)
-    {
-        g.setColour(Colors::PresetPanel::deleteRed);
-    }
-    else
-    {
         g.setColour(buttonColor);
-    }
 
     g.drawFittedText(b.getButtonText(), b.getLocalBounds(), juce::Justification::centred, 1);
 }

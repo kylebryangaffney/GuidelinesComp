@@ -8,21 +8,25 @@
   ==============================================================================
 */
 
+
 #include "CompressorUnit.h"
 
 void CompressorUnit::prepare(const juce::dsp::ProcessSpec& spec)
 {
+    // Prepare the internal JUCE compressor with the given spec
     compressor.prepare(spec);
 
-    attackSmoothed.reset(spec.sampleRate, smootheningInSeconds);
-    releaseSmoothed.reset(spec.sampleRate, smootheningInSeconds);
-    ratioSmoothed.reset(spec.sampleRate, smootheningInSeconds);
-    thresholdSmoothed.reset(spec.sampleRate, smootheningInSeconds);
+    // Set up smoothing for all parameters
+    attackSmoothed.reset(spec.sampleRate, smoothingInSeconds);
+    releaseSmoothed.reset(spec.sampleRate, smoothingInSeconds);
+    ratioSmoothed.reset(spec.sampleRate, smoothingInSeconds);
+    thresholdSmoothed.reset(spec.sampleRate, smoothingInSeconds);
 
-    attackSmoothed.setCurrentAndTargetValue( 50.f);
-    releaseSmoothed.setCurrentAndTargetValue( 55.0f);
-    ratioSmoothed.setCurrentAndTargetValue( 2.0f);
-    thresholdSmoothed.setCurrentAndTargetValue( -12.0f);
+    // Set default parameter values
+    attackSmoothed.setCurrentAndTargetValue(50.f);      // ms
+    releaseSmoothed.setCurrentAndTargetValue(55.0f);     // ms
+    ratioSmoothed.setCurrentAndTargetValue(2.0f);        // 2:1 ratio
+    thresholdSmoothed.setCurrentAndTargetValue(-12.0f);  // dB
 }
 
 void CompressorUnit::reset()
@@ -30,22 +34,32 @@ void CompressorUnit::reset()
     compressor.reset();
 }
 
-void CompressorUnit::updateCompressorSettings(float attackMs, float releaseMs, float ratioVal, float thresholdDb)
-{
-    jassert(attackMs && releaseMs && ratioVal && thresholdDb);
 
+void CompressorUnit::updateCompressorSettings(const float attackMs,
+    const float releaseMs,
+    const float ratioVal,
+    const float thresholdDb)
+{
+    // Validate inputs to prevent runtime issues
+    jassert(attackMs >= 0.0f && "Attack must be >= 0 ms");
+    jassert(releaseMs >= 0.0f && "Release must be >= 0 ms");
+    jassert(ratioVal >= 1.0f && "Ratio must be >= 1.0");
+
+    // Apply new smoothed target values
     attackSmoothed.setTargetValue(attackMs);
     releaseSmoothed.setTargetValue(releaseMs);
     ratioSmoothed.setTargetValue(ratioVal);
     thresholdSmoothed.setTargetValue(thresholdDb);
 }
 
-void CompressorUnit::processCompression(juce::dsp::ProcessContextReplacing<float> context)
+void CompressorUnit::processCompression(juce::dsp::ProcessContextReplacing<float>& context)
 {
+    // Apply smoothed values to the compressor
     compressor.setAttack(attackSmoothed.getNextValue());
     compressor.setRelease(releaseSmoothed.getNextValue());
     compressor.setRatio(ratioSmoothed.getNextValue());
     compressor.setThreshold(thresholdSmoothed.getNextValue());
 
+    // Process the incoming audio block
     compressor.process(context);
 }

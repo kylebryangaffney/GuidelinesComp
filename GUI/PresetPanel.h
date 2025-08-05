@@ -1,4 +1,5 @@
-﻿/*
+﻿
+/*
   ==============================================================================
 
     PresetPanel.h
@@ -7,13 +8,10 @@
 
   ==============================================================================
 */
-
 #pragma once
 
 #include <JuceHeader.h>
 #include "../Service/PresetManager.h"
-#include "CheckmarkButton.h"
-#include "XButton.h"
 
 namespace Gui
 {
@@ -29,19 +27,32 @@ namespace Gui
         void loadPresetList();
 
     private:
+        // Listener overrides
         void buttonClicked(juce::Button* button) override;
         void comboBoxChanged(juce::ComboBox* comboBoxThatHasChanged) override;
+
+        // Action menu handling
+        void handleActionMenuResult(int result);
+        static void popupMenuCallback(int result,
+            juce::Component::SafePointer<PresetPanel> safePanel);
+
+        // File chooser handling
+        void handleFileChooserResult(const juce::FileChooser& chooser);
+        static void fileChooserCallback(const juce::FileChooser& chooser,
+            juce::Component::SafePointer<PresetPanel> safePanel);
+
+        // Internal helpers
         void configureButton(juce::Button& button, const juce::String& buttonText);
 
-        std::unique_ptr<CheckmarkButton> saveButton;
-        std::unique_ptr<XButton> deleteButton;
+        // --- Members ---
+        Service::PresetManager& presetManager;
+
+        std::unique_ptr<juce::DrawableButton> actionButton;
         juce::TextButton previousPresetButton, nextPresetButton;
         juce::ComboBox presetList;
 
-        Service::PresetManager& presetManager;
         std::unique_ptr<juce::FileChooser> fileChooser;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PresetPanel)
     };
 }
-
