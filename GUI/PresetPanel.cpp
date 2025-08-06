@@ -21,6 +21,7 @@ namespace Gui
         actionButton = std::make_unique<juce::DrawableButton>(
             "ActionButton", juce::DrawableButton::ImageOnButtonBackground);
 
+        // set the images for the action button gear
         std::unique_ptr<juce::Drawable> defaultDrawable = juce::Drawable::createFromImageData(
             BinaryData::gearDefault_svg, BinaryData::gearDefault_svgSize);
         std::unique_ptr<juce::Drawable> hoverDrawable = juce::Drawable::createFromImageData(
@@ -34,7 +35,14 @@ namespace Gui
         addAndMakeVisible(*actionButton);
         actionButton->addListener(this);
 
-        // Preset list
+        configureButton(previousPresetButton, u8"\u25C0");
+        configureButton(nextPresetButton, u8"\u25B6");
+        previousPresetButton.addListener(this);
+        nextPresetButton.addListener(this);
+        addAndMakeVisible(previousPresetButton);
+        addAndMakeVisible(nextPresetButton);
+
+        // add the Preset list
         presetList.setTextWhenNothingSelected("Select Preset");
         presetList.setMouseCursor(juce::MouseCursor::PointingHandCursor);
         addAndMakeVisible(presetList);
@@ -42,6 +50,7 @@ namespace Gui
 
         loadPresetList();
         setLookAndFeel(PresetPanelLookAndFeel::get());
+
     }
 
     PresetPanel::~PresetPanel()
@@ -58,21 +67,19 @@ namespace Gui
         const int reduce = 4;
         auto area = getLocalBounds().reduced(reduce);
 
-        const int buttonRowHeight = area.getHeight() / 2;
-        auto buttonRow = area.removeFromTop(buttonRowHeight);
-        auto listRow = area;
+        const int sectionWidth = area.getWidth() / 6;
 
-        const int buttonWidth = buttonRow.getWidth() / 4;
-
-        auto prevBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
-        auto nextBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
-        auto actionBounds = buttonRow.removeFromLeft(buttonWidth).reduced(reduce);
+        auto prevBounds = area.removeFromLeft(sectionWidth).reduced(reduce);
+        auto nextBounds = area.removeFromLeft(sectionWidth).reduced(reduce);
+        auto comboBounds = area.removeFromLeft(sectionWidth * 3).reduced(reduce);
+        auto actionBounds = area.reduced(reduce);
 
         previousPresetButton.setBounds(prevBounds);
         nextPresetButton.setBounds(nextBounds);
+        presetList.setBounds(comboBounds);
         actionButton->setBounds(actionBounds);
-        presetList.setBounds(listRow.reduced(reduce));
     }
+
 
     void PresetPanel::loadPresetList()
     {
@@ -97,7 +104,7 @@ namespace Gui
             menu.addItem(2, "Overwrite Current");
             menu.addItem(3, "Delete");
 
-            auto safeThis = juce::Component::SafePointer<PresetPanel>(this);
+            juce::Component::SafePointer<Gui::PresetPanel> safeThis = juce::Component::SafePointer<PresetPanel>(this);
 
             menu.showMenuAsync(
                 juce::PopupMenu::Options().withTargetComponent(*actionButton),
