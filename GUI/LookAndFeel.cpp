@@ -43,7 +43,8 @@ PresetPanelLookAndFeel::PresetPanelLookAndFeel()
 
 }
 
-void PresetPanelLookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& b, const juce::Colour& backgroundColor,
+void PresetPanelLookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Button& b,
+    [[maybe_unused]] const juce::Colour& backgroundColor,
     bool isMouseOverButton, bool isButtonDown)
 {
     auto bounds = b.getLocalBounds().toFloat();
@@ -71,20 +72,21 @@ void PresetPanelLookAndFeel::drawButtonBackground(juce::Graphics& g, juce::Butto
 
 void PresetPanelLookAndFeel::drawButtonText(juce::Graphics& g,
     juce::TextButton& b,
-    bool isMouseOverButton, bool isButtonDown)
+    [[maybe_unused]] bool isMouseOverButton, [[maybe_unused]] bool isButtonDown)
 {
     juce::Colour buttonColor = b.findColour(b.getToggleState() ? juce::TextButton::textColourOnId
         : juce::TextButton::textColourOffId);
 
-        g.setColour(buttonColor);
+    g.setColour(buttonColor);
 
     g.drawFittedText(b.getButtonText(), b.getLocalBounds(), juce::Justification::centred, 1);
 }
 
 
 void PresetPanelLookAndFeel::drawComboBox(juce::Graphics& g,
-    int width, int height, bool isButtonDown,
-    int buttonX, int buttonY, int buttonW, int buttonH,
+    int width, int height, [[maybe_unused]] bool isButtonDown,
+    [[maybe_unused]] int buttonX, [[maybe_unused]] int buttonY,
+    [[maybe_unused]] int buttonW, [[maybe_unused]] int buttonH,
     juce::ComboBox& box)
 {
     auto cornerSize = 4.0f;
@@ -161,7 +163,7 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
     juce::PathStrokeType stroke(lineWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded);
 
     drawArcTrack(g, bounds, boundsCenter, arcRadius, rotaryStartAngle, rotaryEndAngle, stroke);
-    
+
 
     // Draw dial pointer to indicate current value
     float toAngle = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
@@ -177,25 +179,42 @@ void RotaryKnobLookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y, in
 }
 
 void RotaryKnobLookAndFeel::drawTicks(juce::Graphics& g,
-    int numTicks,
-    juce::Point<float> knobCenter,
-    float tickRadius,
-    float rotaryStartAngle,
-    float rotaryEndAngle)
+    const int numTicks,
+    const juce::Point<float> knobCenter,
+    const float tickRadius,
+    const float rotaryStartAngle,
+    const float rotaryEndAngle) noexcept
 {
-    const float tickLength = 7.0f;
-    const float tickThickness = 1.0f;
+    constexpr float tickLength = 6.0f;
+    constexpr float tickThickness = 1.0f;
+
+    // Preconditions (debug)
+    jassert(numTicks >= 2);
+    jassert(tickRadius > 0.0f);
+    jassert(rotaryEndAngle != rotaryStartAngle);
+
+    // Release guard
+    if (numTicks < 2 || tickRadius <= 0.0f || rotaryEndAngle == rotaryStartAngle)
+        return;
+
+    const float denom = float(numTicks - 1);
+    const float invDen = 1.0f / denom;
+    const float span = (rotaryEndAngle - rotaryStartAngle);
+
+    g.setColour(Colors::Knob::tick);
 
     for (int i = 0; i < numTicks; ++i)
     {
-        float angle = rotaryStartAngle + i * (rotaryEndAngle - rotaryStartAngle) / (numTicks - 1);
-        auto p1 = knobCenter.getPointOnCircumference(tickRadius, angle);
-        auto p2 = knobCenter.getPointOnCircumference(tickRadius + tickLength, angle);
+        const float t = i * invDen;
+        const float angle = rotaryStartAngle + t * span;
 
-        g.setColour(Colors::Knob::tick);
+        const auto p1 = knobCenter.getPointOnCircumference(tickRadius, angle);
+        const auto p2 = knobCenter.getPointOnCircumference(tickRadius + tickLength, angle);
+
         g.drawLine({ p1, p2 }, tickThickness);
     }
 }
+
 
 void RotaryKnobLookAndFeel::drawKnobBody(juce::Graphics& g, juce::Rectangle<float> knobRect)
 {
@@ -331,11 +350,28 @@ juce::Label* RotaryKnobLookAndFeel::createSliderTextBox(juce::Slider& slider)
     return label;
 }
 
+namespace
+{
+    void drawTickWithLabel(juce::Graphics& g, int x, int tickTop, int tickHeight,
+        const juce::String& label, int labelTop, int labelWidth, int labelHeight)
+    {
+        g.setColour(Colors::LevelMeter::tickLine);
+        g.fillRect(x, tickTop, 1, tickHeight);
+
+        g.setColour(Colors::LevelMeter::tickLabel);
+        g.drawText(
+            label,
+            x - labelWidth / 2, labelTop, labelWidth, labelHeight, juce::Justification::centred
+        );
+    }
+}
+
+
 //==============================================================================
 // LevelMeterLookAndFeel
-
 void LevelMeterLookAndFeel::drawLevelMeter(juce::Graphics& g, const LevelMeter& meter)
 {
+    const auto font = Fonts::getFont(tickFontHeight);
     constexpr float borderThickness = 1.0f;
     constexpr float borderRadius = 4.0f;
 
@@ -343,54 +379,56 @@ void LevelMeterLookAndFeel::drawLevelMeter(juce::Graphics& g, const LevelMeter& 
     auto innerRect = borderRect.reduced(10.0f);
 
     g.fillAll(Colors::LevelMeter::background);
-
     g.setColour(Colors::LevelMeter::border);
     g.drawRoundedRectangle(borderRect, borderRadius, borderThickness);
-    g.setFont(Fonts::getFont(tickFontHeight));
+    g.setFont(font);
 
     // Bar settings
-    const int barHeight = 7;
-    const int rmsHeight = 4;
-    const int barSpacing = 2; // space between bars
+    constexpr int barHeight = 7;
+    constexpr int rmsHeight = 4;
+    constexpr int barSpacing = 2; // space between bars
 
-    // Calculate bar Y positions within 'inner'
-    int yPeakL = innerRect.getY();
-    int yPeakR = yPeakL + barHeight + barSpacing;
-    int yRmsL = yPeakL;
-    int yRmsR = yPeakR;
+    // Meter geometry (match your existing logic; keep conversions the same)
+    const int xLeft = static_cast<int>(innerRect.getX());
+    const int xRight = static_cast<int>(innerRect.getRight());
+    const int w = static_cast<int>(innerRect.getWidth());
+
+    // Early-out if degenerate
+    if (w <= 0)
+        return;
+
+    // Bar Y positions
+    const int yPeakL = static_cast<int>(innerRect.getY());
+    const int yPeakR = yPeakL + barHeight + barSpacing;
+    const int yRmsL = yPeakL;
+    const int yRmsR = yPeakR;
+
+    // Mapper: dB -> pixel x (explicit captures, no [&])
+    const auto map = [xLeft, xRight, &meter](float db) noexcept
+        {
+            return meter.positionForLevel(db, xLeft, xRight);
+        };
 
     // Draw peak and RMS meters for both channels
-    drawPeakLevel(innerRect.getX(), yPeakL, innerRect.getWidth(), barHeight, g, meter.getPeakLevelL(),
-        [&](float db) { return meter.positionForLevel(db, innerRect.getX(), innerRect.getRight()); });
-    drawPeakLevel(innerRect.getX(), yPeakR, innerRect.getWidth(), barHeight, g, meter.getPeakLevelR(),
-        [&](float db) { return meter.positionForLevel(db, innerRect.getX(), innerRect.getRight()); });
+    drawPeakLevel(xLeft, yPeakL, w, barHeight, g, meter.getPeakLevelL(), map);
+    drawPeakLevel(xLeft, yPeakR, w, barHeight, g, meter.getPeakLevelR(), map);
 
-    drawRmsLevel(innerRect.getX(), yRmsL, innerRect.getWidth(), rmsHeight, g, meter.getRmsLevelL(),
-        [&](float db) { return meter.positionForLevel(db, innerRect.getX(), innerRect.getRight()); });
-    drawRmsLevel(innerRect.getX(), yRmsR, innerRect.getWidth(), rmsHeight, g, meter.getRmsLevelR(),
-        [&](float db) { return meter.positionForLevel(db, innerRect.getX(), innerRect.getRight()); });
+    drawRmsLevel(xLeft, yRmsL, w, rmsHeight, g, meter.getRmsLevelL(), map);
+    drawRmsLevel(xLeft, yRmsR, w, rmsHeight, g, meter.getRmsLevelR(), map);
 
-    // Draw dB tick marks with numeric labels
-    const int tickTop = innerRect.getY() + 2;           // 2 px down from top
-    const int tickHeight = 14;
-    const int labelTop = tickTop + tickHeight;        // below tick
-    const int labelHeight = 12;
+    // Tick marks and labels
+    const int tickTop = yPeakL + 2;          // 2 px down from top
+    constexpr int tickHeight = 14;
+    const int labelTop = tickTop + tickHeight;
+    constexpr int labelHeight = 12;
+    constexpr int labelWidth = 25;
 
     for (float db = meter.maxdB; db >= meter.mindB; db -= meter.stepdB)
     {
-        int x = meter.positionForLevel(db, innerRect.getX(), innerRect.getRight());
-        g.setColour(Colors::LevelMeter::tickLine);
-        g.fillRect(x, tickTop, 1, tickHeight);
-
-        g.setColour(Colors::LevelMeter::tickLabel);
-        g.drawText(
+        const int x = map(db);
+        drawTickWithLabel(g, x, tickTop, tickHeight,
             juce::String(int(db)),
-            x - 12,
-            labelTop,
-            24,
-            labelHeight,
-            juce::Justification::centred
-        );
+            labelTop, labelWidth, labelHeight);
     }
 }
 
@@ -401,8 +439,12 @@ void LevelMeterLookAndFeel::drawMeterBar(int x, int y, int width, int height, ju
     if (levelDB <= clampdB)
         return;
 
-    const int xStart = juce::jlimit(x, x + width, positionForLevel(levelDB));
-    const int xZero = juce::jlimit(x, x + width, positionForLevel(0.0f));
+    const auto clampToBar = [&](float db)
+        {
+            return juce::jlimit(x, x + width, positionForLevel(db));
+        };
+    const int xStart = clampToBar(levelDB);
+    const int xZero = clampToBar(0.0f);
 
     if (xStart > xZero)
     {
@@ -441,6 +483,7 @@ void LevelMeterLookAndFeel::drawRmsLevel(int x, int y, int width, int height,
 // GainReductionMeterLookAndFeel
 void GainReductionMeterLookAndFeel::drawGainReductionMeter(juce::Graphics& g, const GainReductionMeter& meter)
 {
+    auto font = Fonts::getFont(tickFontHeight);
     constexpr float borderThickness = 1.0f;
     constexpr float borderRadius = 4.0f;
 
@@ -451,7 +494,7 @@ void GainReductionMeterLookAndFeel::drawGainReductionMeter(juce::Graphics& g, co
 
     g.setColour(Colors::LevelMeter::border);
     g.drawRoundedRectangle(borderRect, borderRadius, borderThickness);
-    g.setFont(Fonts::getFont(tickFontHeight));
+    g.setFont(font);
 
 
     // Bar settings
@@ -466,39 +509,38 @@ void GainReductionMeterLookAndFeel::drawGainReductionMeter(juce::Graphics& g, co
     const int tickHeight = 8;
     const int labelTop = tickTop + tickHeight;        // below tick
     const int labelHeight = 12;
+    constexpr int labelWidth = 27;
+
 
     // Draw vertical ticks and labels
     for (float db = GainReductionMeter::maxdB; db >= GainReductionMeter::mindB - 0.1f; db -= GainReductionMeter::stepdB)
     {
         int x = meter.positionForLevel(db, innerRect.getX(), innerRect.getRight());
-        g.setColour(Colors::LevelMeter::tickLine);
-        g.fillRect(x, tickTop, 1, tickHeight);
-
-        g.setColour(Colors::LevelMeter::tickLabel);
-        g.drawText(
-            juce::String(int(db)),
-            x - 8, labelTop, 28, labelHeight, juce::Justification::centred
-        );
+        drawTickWithLabel(g, x, tickTop, tickHeight, juce::String(int(db)), labelTop, labelWidth, labelHeight);
     }
 }
-
-// Horizontal bar
 void GainReductionMeterLookAndFeel::drawMeterBar(
     int x, int y, int width, int height, juce::Graphics& g, float levelDB,
     std::function<int(float)> positionForLevel, juce::Colour fillColour)
 {
-    float clampedDB = juce::jlimit(GainReductionMeter::mindB, GainReductionMeter::maxdB, levelDB);
+    if (width <= 0 || height <= 0)
+        return;
 
-    int xRight = juce::jlimit(x, x + width, positionForLevel(GainReductionMeter::maxdB));  // no reduction (right)
-    int xEnd = juce::jlimit(x, x + width, positionForLevel(clampedDB));                  // current reduction
+    const float clampedDB = juce::jlimit(GainReductionMeter::mindB, GainReductionMeter::maxdB, levelDB);
 
-    // Draw gain reduction bar
-    if (xEnd < xRight)
+    const int a = juce::jlimit(x, x + width, positionForLevel(GainReductionMeter::maxdB)); // “no GR”
+    const int b = juce::jlimit(x, x + width, positionForLevel(clampedDB));                 // current GR
+
+    const int barStart = std::min(a, b);
+    const int barEnd = std::max(a, b);
+
+    if (barEnd > barStart)
     {
         g.setColour(fillColour);
-        g.fillRect(xEnd, y, xRight - xEnd, height);
+        g.fillRect(barStart, y, barEnd - barStart, height);
     }
 }
+
 
 // Wrapper for drawing left/right RMS levels
 void GainReductionMeterLookAndFeel::drawRmsLevel(

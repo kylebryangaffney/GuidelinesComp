@@ -111,8 +111,4 @@ void GuideLinesCompAudioProcessorEditor::timerCallback()
     controlKnob.setAlertLevel(juce::jlimit(0.f, 1.f, compress / 12));
     outputGainKnob.setAlertLevel(getNormalizedAlertLevel(output, 0.8f, 1.2f));
 
-    //compressionKnob.setAlertLevel(juce::jlimit(0.0f, 1.0f, input));
-    //controlKnob.setAlertLevel(juce::jlimit(0.f, 1.f, compress / 12));
-    //outputGainKnob.setAlertLevel(juce::jlimit(0.0f, 1.0f, output));
-
 }

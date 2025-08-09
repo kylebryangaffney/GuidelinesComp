@@ -10,41 +10,55 @@
 
 #include "Parameters.h"
 
+//==============================================================================
+// Helper Functions
+//==============================================================================
+
+// Template to safely assign parameter pointers
 template<typename T>
-static void castParameter(juce::AudioProcessorValueTreeState& apvts,
+inline void castParameter(juce::AudioProcessorValueTreeState& apvts,
     const juce::ParameterID& id, T& destination)
 {
     destination = dynamic_cast<T>(apvts.getParameter(id.getParamID()));
     jassert(destination);
 }
 
-static juce::String stringFromHz(float value, int)
+// UI: Float (Hz) -> Display String
+static juce::String stringFromHz(float value, [[maybe_unused]] int)
 {
     if (value < 1000.f)       return juce::String(int(value)) + " Hz";
     else if (value < 10000.f) return juce::String(value / 1000.f, 2) + " kHz";
     else                      return juce::String(value / 1000.f, 1) + " kHz";
 }
 
+// UI: String -> Float (Hz)
 static float hzFromString(const juce::String& str)
 {
     float value = str.getFloatValue();
     return value < 20.f ? value * 1000.f : value;
 }
 
-static juce::String stringFromDecimal(float value, int)
+// UI: Float -> Display Decimal
+static juce::String stringFromDecimal(float value, [[maybe_unused]] int)
 {
     return juce::String(int(value));
 }
 
+// UI: String -> Float (Decimal)
 static float decimalFromString(const juce::String& str)
 {
     return str.getFloatValue();
 }
 
-static juce::String stringFromDecibels(float value, int)
+// UI: Float (dB) -> Display String
+static juce::String stringFromDecibels(float value, [[maybe_unused]] int)
 {
     return juce::String(value, 1) + " dB";
 }
+
+//==============================================================================
+// Parameters Implementation
+//==============================================================================
 
 Parameters::Parameters(juce::AudioProcessorValueTreeState& apvts)
 {
@@ -55,7 +69,6 @@ Parameters::Parameters(juce::AudioProcessorValueTreeState& apvts)
     castParameter(apvts, compressionParamID, compressionParam);
 }
 
-
 juce::AudioProcessorValueTreeState::ParameterLayout Parameters::createParameterLayout()
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
@@ -64,22 +77,26 @@ juce::AudioProcessorValueTreeState::ParameterLayout Parameters::createParameterL
         controlParamID, "Control",
         juce::NormalisableRange<float>{ 0.0f, 100.0f },
         0.f,
-        juce::AudioParameterFloatAttributes().withStringFromValueFunction(stringFromDecimal).withValueFromStringFunction(decimalFromString)
+        juce::AudioParameterFloatAttributes()
+        .withStringFromValueFunction(stringFromDecimal)
+        .withValueFromStringFunction(decimalFromString)
     ));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         compressionParamID, "Compression",
         juce::NormalisableRange<float>{ 0.0f, 100.0f },
         0.f,
-        juce::AudioParameterFloatAttributes().withStringFromValueFunction(stringFromDecimal).withValueFromStringFunction(decimalFromString)
+        juce::AudioParameterFloatAttributes()
+        .withStringFromValueFunction(stringFromDecimal)
+        .withValueFromStringFunction(decimalFromString)
     ));
-
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         lowCutParamID, "Low Cut",
         juce::NormalisableRange<float>{ 20.f, 1000.f, 1.f, 0.3f },
         20.f,
-        juce::AudioParameterFloatAttributes().withStringFromValueFunction(stringFromHz)
+        juce::AudioParameterFloatAttributes()
+        .withStringFromValueFunction(stringFromHz)
         .withValueFromStringFunction(hzFromString)
     ));
 
@@ -87,7 +104,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout Parameters::createParameterL
         outputGainParamID, "Output Gain",
         juce::NormalisableRange<float>{ -18.f, 12.f },
         0.f,
-        juce::AudioParameterFloatAttributes().withStringFromValueFunction(stringFromDecibels)
+        juce::AudioParameterFloatAttributes()
+        .withStringFromValueFunction(stringFromDecibels)
     ));
 
     layout.add(std::make_unique<juce::AudioParameterBool>(
@@ -99,21 +117,20 @@ juce::AudioProcessorValueTreeState::ParameterLayout Parameters::createParameterL
 
 void Parameters::prepareToPlay(double sampleRate) noexcept
 {
-    const double smootheningInSeconds = 0.0002;
+    const double smoothingTime = 0.002;
 
-    outputGainSmoother.reset(sampleRate, smootheningInSeconds);
-    lowCutSmoother.reset(sampleRate, smootheningInSeconds);
-    controlSmoother.reset(sampleRate, smootheningInSeconds);
-    compressionSmoother.reset(sampleRate, smootheningInSeconds);
+    outputGainSmoother.reset(sampleRate, smoothingTime);
+    lowCutSmoother.reset(sampleRate, smoothingTime);
+    controlSmoother.reset(sampleRate, smoothingTime);
+    compressionSmoother.reset(sampleRate, smoothingTime);
 }
-
 
 void Parameters::reset() noexcept
 {
     outputGain = 0.f;
     lowCut = 20.f;
-    control = 0.0f;
-    compression = 0.0f;
+    control = 0.f;
+    compression = 0.f;
 
     outputGainSmoother.setCurrentAndTargetValue(juce::Decibels::decibelsToGain(outputGainParam->get()));
     lowCutSmoother.setCurrentAndTargetValue(lowCutParam->get());
@@ -127,6 +144,7 @@ void Parameters::update() noexcept
     lowCutSmoother.setTargetValue(lowCutParam->get());
     controlSmoother.setTargetValue(controlParam->get());
     compressionSmoother.setTargetValue(compressionParam->get());
+
     bypassed = bypassParam->get();
 }
 

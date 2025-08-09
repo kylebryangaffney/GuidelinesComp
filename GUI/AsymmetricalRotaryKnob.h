@@ -21,6 +21,6 @@ public:
         juce::AudioProcessorValueTreeState& apvts,
         const juce::ParameterID& parameterID);
 
-    virtual int getNumTicks() const { return 18; }
+    virtual int getNumTicks() const { return 10; }
     
 };

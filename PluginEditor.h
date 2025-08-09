@@ -38,7 +38,7 @@ private:
 
     RotaryKnob lowCutKnob{ "Lo Cut", audioProcessor.apvts, lowCutParamID };
     RotaryKnob compressionKnob{ "Compress", audioProcessor.apvts, compressionParamID }; // Strength
-    RotaryKnob controlKnob{ "Control", audioProcessor.apvts, controlParamID }; // Shape
+    RotaryKnob controlKnob{ "Control", audioProcessor.apvts, controlParamID }; // Color
     AsymmetricalRotaryKnob outputGainKnob{ "Out", audioProcessor.apvts, outputGainParamID };
 
     LevelMeter inputMeter{

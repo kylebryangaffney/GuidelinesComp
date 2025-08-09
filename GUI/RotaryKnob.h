@@ -30,7 +30,7 @@ public:
 
     void setAlertLevel(float newAlert);
     float getAlertLevel() const;
-    virtual int getNumTicks() const { return 21; }
+    virtual int getNumTicks() const { return 13; }
 
 
 private:

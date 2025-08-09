@@ -1,3 +1,4 @@
+
 /*
   ==============================================================================
 
@@ -20,8 +21,8 @@
 // Color Scheme
 namespace Colors
 {
-    const juce::Colour background{ 10, 10, 10 };            
-    const juce::Colour header{ 50, 50, 50 };                
+    const juce::Colour background{ 10, 10, 10 };
+    const juce::Colour header{ 50, 50, 50 };
 
     namespace Knob
     {
@@ -111,21 +112,22 @@ public:
         return &instance;
     }
 
-    void drawButtonBackground(juce::Graphics& g, juce::Button& b, const juce::Colour& backgroundColor,
+    void drawButtonBackground(juce::Graphics& g, juce::Button& b,
+        [[maybe_unused]] const juce::Colour& backgroundColor,
         bool isMouseOverButton, bool isButtonDown) override;
-    
+
     void drawButtonText(juce::Graphics& g,
         juce::TextButton& b,
-        bool isMouseOverButton, bool isButtonDown) override;
-
+        [[maybe_unused]] bool isMouseOverButton, [[maybe_unused]] bool isButtonDown) override;
 
     void drawComboBox(juce::Graphics& g,
-        int width, int height, bool isButtonDown,
-        int buttonX, int buttonY, int buttonW, int buttonH,
+        int width, int height, [[maybe_unused]] bool isButtonDown,
+        [[maybe_unused]] int buttonX, [[maybe_unused]] int buttonY,
+        [[maybe_unused]] int buttonW, [[maybe_unused]] int buttonH,
         juce::ComboBox& box) override;
 
     void drawPresetPanelBackground(juce::Graphics& g, juce::Rectangle<int> area);
-    
+
 
 private:
 
@@ -151,24 +153,25 @@ public:
         float sliderPos, float rotaryStartAngle,
         float rotaryEndAngle, juce::Slider& slider) override;
 
-    juce::Font getLabelFont(juce::Label&) override;
+    juce::Font getLabelFont([[maybe_unused]] juce::Label&) override;
     juce::Label* createSliderTextBox(juce::Slider&) override;
 
     void drawTextEditorOutline(juce::Graphics&, int, int, juce::TextEditor&) override {}
-    void fillTextEditorBackground(juce::Graphics&, int width, int height, juce::TextEditor&) override;
+    void fillTextEditorBackground(juce::Graphics&, [[maybe_unused]] int width, [[maybe_unused]] int height, juce::TextEditor&) override;
     void drawTicks(juce::Graphics& g,
-        int numTicks,
-        juce::Point<float> knobCenter,
-        float tickRadius,
-        float rotaryStartAngle,
-        float rotaryEndAngle);
+        const int numTicks,
+        const juce::Point<float> knobCenter,
+        const float tickRadius,
+        const float rotaryStartAngle,
+        const float rotaryEndAngle) noexcept;
+
     void drawKnobBody(juce::Graphics& g, juce::Rectangle<float> knobRect);
-    void drawArcTrack(juce::Graphics& g, 
-        juce::Rectangle<float> bounds, 
+    void drawArcTrack(juce::Graphics& g,
+        juce::Rectangle<float> bounds,
         juce::Point<float> boundsCenter,
-        float arcRadius, 
-        float rotaryStartAngle, 
-        float rotaryEndAngle, 
+        float arcRadius,
+        float rotaryStartAngle,
+        float rotaryEndAngle,
         juce::PathStrokeType stroke);
     void drawDialIndicator(juce::Graphics& g,
         juce::Point<float> knobCenter,
@@ -179,12 +182,12 @@ public:
         juce::Slider& slider,
         juce::Point<float> boundsCenter,
         juce::PathStrokeType stroke,
-        float rotaryStartAngle, 
-        float rotaryEndAngle, 
-        float arcRadius, 
+        float rotaryStartAngle,
+        float rotaryEndAngle,
+        float arcRadius,
         float toAngle,
         float alertLevel
-        );
+    );
 
 
 private:
@@ -262,8 +265,9 @@ class MainLookAndFeel : public juce::LookAndFeel_V4
 public:
     MainLookAndFeel();
 
-    juce::Font getLabelFont(juce::Label&) override;
+    juce::Font getLabelFont([[maybe_unused]] juce::Label&) override;
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainLookAndFeel)
 };
+
