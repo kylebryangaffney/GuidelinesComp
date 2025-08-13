@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <cmath>
 #include <JuceHeader.h>
 #include "RotaryKnob.h"
 #include "LevelMeter.h"
@@ -97,7 +98,6 @@ private:
     static const juce::Typeface::Ptr typeface;
 };
 
-
 //==================================
 // PresetPanel
 
@@ -112,27 +112,30 @@ public:
         return &instance;
     }
 
-    void drawButtonBackground(juce::Graphics& g, juce::Button& b,
-        [[maybe_unused]] const juce::Colour& backgroundColor,
-        bool isMouseOverButton, bool isButtonDown) override;
+    void drawButtonBackground(juce::Graphics& g,
+        juce::Button& b,
+        const juce::Colour& backgroundColor,
+        bool isMouseOverButton,
+        bool isButtonDown) override;
 
     void drawButtonText(juce::Graphics& g,
         juce::TextButton& b,
-        [[maybe_unused]] bool isMouseOverButton, [[maybe_unused]] bool isButtonDown) override;
+        bool isMouseOverButton,
+        bool isButtonDown) override;
 
     void drawComboBox(juce::Graphics& g,
-        int width, int height, [[maybe_unused]] bool isButtonDown,
-        [[maybe_unused]] int buttonX, [[maybe_unused]] int buttonY,
-        [[maybe_unused]] int buttonW, [[maybe_unused]] int buttonH,
+        int width, int height,
+        bool isButtonDown,
+        int buttonX, int buttonY,
+        int buttonW, int buttonH,
         juce::ComboBox& box) override;
 
-    void drawPresetPanelBackground(juce::Graphics& g, juce::Rectangle<int> area);
-
+    // Helper (not a JUCE override)
+    void drawPresetPanelBackground(juce::Graphics& g,
+        juce::Rectangle<int> area);
 
 private:
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PresetPanelLookAndFeel)
-
 };
 
 //==============================================================================
@@ -149,45 +152,55 @@ public:
         return &instance;
     }
 
-    void drawRotarySlider(juce::Graphics& g, int x, int y, int width, int height,
-        float sliderPos, float rotaryStartAngle,
-        float rotaryEndAngle, juce::Slider& slider) override;
 
-    juce::Font getLabelFont([[maybe_unused]] juce::Label&) override;
-    juce::Label* createSliderTextBox(juce::Slider&) override;
+    // JUCE overrides
+    void drawRotarySlider(juce::Graphics& g,
+        int x, int y, int width, int height,
+        float sliderPos,
+        float rotaryStartAngle, float rotaryEndAngle,
+        juce::Slider& slider) override;
 
-    void drawTextEditorOutline(juce::Graphics&, int, int, juce::TextEditor&) override {}
-    void fillTextEditorBackground(juce::Graphics&, [[maybe_unused]] int width, [[maybe_unused]] int height, juce::TextEditor&) override;
+    juce::Font getLabelFont(juce::Label& label) override;
+    void fillTextEditorBackground(juce::Graphics& g,
+        int width, int height,
+        juce::TextEditor& textEditor) override;
+
+    // Helpers
     void drawTicks(juce::Graphics& g,
-        const int numTicks,
-        const juce::Point<float> knobCenter,
-        const float tickRadius,
-        const float rotaryStartAngle,
-        const float rotaryEndAngle) noexcept;
+        int numTicks,
+        juce::Point<float> knobCenter,
+        float tickRadius,
+        float rotaryStartAngle,
+        float rotaryEndAngle) noexcept;
 
-    void drawKnobBody(juce::Graphics& g, juce::Rectangle<float> knobRect);
+    void drawKnobBody(juce::Graphics& g,
+        const juce::Rectangle<float>& knobRect) noexcept;
+
     void drawArcTrack(juce::Graphics& g,
-        juce::Rectangle<float> bounds,
+        const juce::Rectangle<float>& bounds,
         juce::Point<float> boundsCenter,
         float arcRadius,
         float rotaryStartAngle,
         float rotaryEndAngle,
-        juce::PathStrokeType stroke);
+        const juce::PathStrokeType& stroke) noexcept;
+
     void drawDialIndicator(juce::Graphics& g,
         juce::Point<float> knobCenter,
         float dialRadius,
         float toAngle,
-        float lineWidth);
+        float lineWidth) noexcept;
+
     void drawValueArc(juce::Graphics& g,
         juce::Slider& slider,
         juce::Point<float> boundsCenter,
-        juce::PathStrokeType stroke,
+        const juce::PathStrokeType& stroke,
         float rotaryStartAngle,
         float rotaryEndAngle,
         float arcRadius,
         float toAngle,
-        float alertLevel
-    );
+        float alertLevel) noexcept;
+
+    juce::Label* createSliderTextBox(juce::Slider& slider);
 
 
 private:
@@ -211,21 +224,25 @@ public:
         return &instance;
     }
 
-    void drawLevelMeter(juce::Graphics& g, const LevelMeter& meter);
-    void drawMeterBar(int x, int y, int width, int height, juce::Graphics& g, float levelDB,
-        std::function<int(float)> positionForLevel, juce::Colour fillColour);
+    void drawLevelMeter(juce::Graphics& g, const LevelMeter& meter) noexcept;
+
+    void drawMeterBar(int x, int y, int width, int height,
+        juce::Graphics& g, float levelDB,
+        const std::function<int(float)>& positionForLevel,
+        juce::Colour fillColour) noexcept;
+
     void drawPeakLevel(int x, int y, int width, int height,
         juce::Graphics& g,
         float levelDB,
-        std::function<int(float)> positionForLevel);
+        const std::function<int(float)>& positionForLevel) noexcept;
+
     void drawRmsLevel(int x, int y, int width, int height,
         juce::Graphics& g,
         float levelDB,
-        std::function<int(float)> positionForLevel);
-
+        const std::function<int(float)>& positionForLevel) noexcept;
 
 private:
-    const float clampdB = -120.0f;
+    static constexpr float clampdB = -120.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeterLookAndFeel)
 };
@@ -243,13 +260,13 @@ public:
         return &instance;
     }
 
-    void drawGainReductionMeter(juce::Graphics& g, const GainReductionMeter& meter);
+    void drawGainReductionMeter(juce::Graphics& g, const GainReductionMeter& meter) noexcept;
     void drawMeterBar(int x, int y, int width, int height, juce::Graphics& g, float levelDB,
-        std::function<int(float)> positionForLevel, juce::Colour fillColour);
+        const std::function<int(float)>& positionForLevel, juce::Colour fillColour) noexcept;
     void drawRmsLevel(int x, int y, int width, int height,
         juce::Graphics& g,
         float levelDB,
-        std::function<int(float)> positionForLevel);
+        const std::function<int(float)>& positionForLevel) noexcept;
 
 private:
     const float clampdB = -120.0f;
