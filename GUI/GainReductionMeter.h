@@ -27,8 +27,8 @@ public:
   
     float getMaxRmsLevel() const;
     static constexpr float maxdB = 0.0f;
-    static constexpr float mindB = -60.0f;
-    static constexpr float stepdB = 6.0f;
+    static constexpr float mindB = -30.0f;
+    static constexpr float stepdB = 3.0f;
 
 private:
     RmsMeasurement& rmsMeasurementL;
@@ -42,8 +42,8 @@ private:
     float maxPos = 0.f;
     float minPos = 0.f;
 
-    float rmsLevelL = clampLevel;
-    float rmsLevelR = clampLevel;
+    float rmsLevelL = mindB;
+    float rmsLevelR = mindB;
     float dbRmsLevelL = 0.f;
     float dbRmsLevelR = 0.f;
 

@@ -10,7 +10,7 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "GUI/LookAndFeel.h"
+#include "LookAndFeel/LookAndFeel.h"
 #include "GUI/RotaryKnob.h"
 #include "GUI/AsymmetricalRotaryKnob.h"
 #include "GUI/LevelMeter.h"

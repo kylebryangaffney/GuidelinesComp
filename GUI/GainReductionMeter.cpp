@@ -10,7 +10,7 @@
   ==============================================================================
 */
 #include "GainReductionMeter.h"
-#include "LookAndFeel.h"
+#include "../LookAndFeel/GainReductionMeterLAF.h"
 
 GainReductionMeter::GainReductionMeter(RmsMeasurement& rmsL, RmsMeasurement& rmsR)
     : rmsMeasurementL(rmsL), rmsMeasurementR(rmsR)
@@ -78,7 +78,9 @@ void GainReductionMeter::timerCallback()
 
 void GainReductionMeter::updateLevel(float newDb, float& smoothedDb, float& leveldB) const
 {
-    if (newDb > smoothedDb)
+    constexpr float ep = 0.1f;
+
+    if (newDb > smoothedDb + ep)
         smoothedDb = newDb;
     else
         smoothedDb += (newDb - smoothedDb) * decay;

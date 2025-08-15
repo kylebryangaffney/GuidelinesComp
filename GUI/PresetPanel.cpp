@@ -8,7 +8,7 @@
   ==============================================================================
 */
 #include "PresetPanel.h"
-#include "LookAndFeel.h"
+#include "../LookAndFeel/PresetPanelLAF.h"
 
 namespace Gui
 {

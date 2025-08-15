@@ -9,7 +9,7 @@
 */
 
 #include "LevelMeter.h"
-#include"LookAndFeel.h"
+#include"../LookAndFeel/LevelMeterLAF.h"
 
 
 //==============================================================================
